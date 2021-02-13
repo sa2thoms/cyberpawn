@@ -15,6 +15,7 @@ namespace cyberpawn {
 		std::optional<int8_t> fileInWhichAPawnMovedTwoSquaresThePreviousMove_;
 		bool whiteMayStillCastle_ = true;
 		bool blackMayStillCastle_ = true;
+		Color turn_ = Color::White;
 
 	public:
 		~ChessPosition() = default;
@@ -26,7 +27,11 @@ namespace cyberpawn {
 			this->setUpStandardChessGame();
 		}
 
+		Color getTurn() const { return turn_; }
+
 		const std::vector<std::vector<PieceCode>> & getBoard() const { return board_; }
+
+		const std::vector<PieceCode> & operator[](int8_t file) const { return board_[file]; }
 
 	private:
 		void setBoardTo8by8() {
@@ -46,7 +51,6 @@ namespace cyberpawn {
 		void setUpStandardChessGame();
 
 	};
-
 
 
 }

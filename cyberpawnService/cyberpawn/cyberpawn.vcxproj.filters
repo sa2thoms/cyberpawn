@@ -39,12 +39,18 @@
     <ClInclude Include="include\cyberpawn\BetaTreeEngine.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\cyberpawn\ChessGameFunctions.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ChessPosition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BetaTreeEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ChessGameFunctions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

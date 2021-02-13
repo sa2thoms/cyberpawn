@@ -47,6 +47,25 @@ namespace cyberpawn {
 		PieceCode operator&(const PieceCode & other) const {
 			return this->code_ & other.code_;
 		}
+
+		bool isKnight() const {
+			return (code_ & 0b11101111) == whiteKnight;
+		}
+		bool isBishop() const {
+			return (code_ & 0b11101111) == whiteBishop;
+		}
+		bool isPawn() const {
+			return (code_ & 0b11101111) == whitePawn;
+		}
+		bool isRook() const {
+			return (code_ & 0b11101111) == whiteRook;
+		}
+		bool isQueen() const {
+			return (code_ & 0b11101111) == whiteQueen;
+		}
+		bool isKing() const {
+			return (code_ & 0b11101111) == whiteKing;
+		}
 	};
 
 

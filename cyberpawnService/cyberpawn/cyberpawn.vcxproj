@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="include\cyberpawn\BetaTreeEngine.hpp" />
     <ClInclude Include="include\cyberpawn\ChessGame.hpp" />
+    <ClInclude Include="include\cyberpawn\ChessGameFunctions.hpp" />
     <ClInclude Include="include\cyberpawn\ChessMove.hpp" />
     <ClInclude Include="include\cyberpawn\ChessPosition.hpp" />
     <ClInclude Include="include\cyberpawn\Color.hpp" />
@@ -22,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BetaTreeEngine.cpp" />
+    <ClCompile Include="ChessGameFunctions.cpp" />
     <ClCompile Include="ChessPosition.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
