@@ -8,6 +8,16 @@ namespace cyberpawn {
 	struct ChessSquare {
 		int8_t file;
 		int8_t rank;
+
+		ChessSquare operator+(const ChessSquare & other) const { return { file + other.file, rank + other.rank }; }
+		ChessSquare operator-(const ChessSquare & other) const { return { file - other.file, rank - other.rank }; }
+
+		bool operator==(const ChessSquare & other) const {
+			return (file == other.file) && (rank == other.rank);
+		}
+		bool operator!=(const ChessSquare & other) const {
+			return !(*this == other);
+		}
 	};
 
 	struct ChessMove {

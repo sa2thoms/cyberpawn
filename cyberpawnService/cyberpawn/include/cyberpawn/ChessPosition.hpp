@@ -2,6 +2,7 @@
 #define CYBERPAWN_CYBERPAWN_CHESS_POSITION_H_INCLUDED
 
 #include "PieceCode.hpp"
+#include "ChessMove.hpp"
 
 #include <vector>
 #include <optional>
@@ -13,8 +14,10 @@ namespace cyberpawn {
 		// a vector of files, each of which is a vector of pieceCodes
 		std::vector< std::vector<PieceCode> > board_;
 		std::optional<int8_t> fileInWhichAPawnMovedTwoSquaresThePreviousMove_;
-		bool whiteMayStillCastle_ = true;
-		bool blackMayStillCastle_ = true;
+		bool whiteMayStillCastleKingside_ = true;
+		bool blackMayStillCastleKingside_ = true;
+		bool whiteMayStillCastleQueenside_ = true;
+		bool blackMayStillCastleQueenside_ = true;
 		Color turn_ = Color::White;
 
 	public:
@@ -29,10 +32,20 @@ namespace cyberpawn {
 
 		Color getTurn() const { return turn_; }
 
+		std::optional<int8_t> fileInWhichAPawnMovedTwoSquaresThePreviousMove() const { return fileInWhichAPawnMovedTwoSquaresThePreviousMove_; }
+
 		const std::vector<std::vector<PieceCode>> & getBoard() const { return board_; }
 
 		const std::vector<PieceCode> & operator[](int8_t file) const { return board_[file]; }
 
+		PieceCode operator[](const ChessSquare square) const { return board_[square.file][square.rank]; }
+
+		// returns true if ther player whose turn it is has not moved his king or kingside rook yet
+		bool mayCastleKingside() const { return (turn_ == Color::White) ? whiteMayStillCastleKingside_ : blackMayStillCastleKingside_; }
+		bool mayCastleQueenside() const { return (turn_ == Color::White) ? whiteMayStillCastleQueenside_ : blackMayStillCastleQueenside_; }
+
+		// returns true if the square is attacked by the opposing player (the player whose turn it is not)
+		bool isSquareAttacked(ChessSquare square) const;
 	private:
 		void setBoardTo8by8() {
 			board_ = std::vector< std::vector<PieceCode> >(8);
