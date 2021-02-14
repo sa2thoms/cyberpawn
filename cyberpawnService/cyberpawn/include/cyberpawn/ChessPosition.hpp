@@ -33,19 +33,41 @@ namespace cyberpawn {
 		Color getTurn() const { return turn_; }
 
 		std::optional<int8_t> fileInWhichAPawnMovedTwoSquaresThePreviousMove() const { return fileInWhichAPawnMovedTwoSquaresThePreviousMove_; }
+        void setFileWherePawnJustMovedTwoSpacesForward(std::optional<int8_t> file) { fileInWhichAPawnMovedTwoSquaresThePreviousMove_ = file; }
 
 		const std::vector<std::vector<PieceCode>> & getBoard() const { return board_; }
 
 		const std::vector<PieceCode> & operator[](int8_t file) const { return board_[file]; }
 
-		PieceCode operator[](const ChessSquare square) const { return board_[square.file][square.rank]; }
+        const PieceCode & operator[](const ChessSquare square) const { return board_[square.file][square.rank]; }
+		PieceCode & operator[](const ChessSquare square) { return board_[square.file][square.rank]; }
 
 		// returns true if ther player whose turn it is has not moved his king or kingside rook yet
 		bool mayCastleKingside() const { return (turn_ == Color::White) ? whiteMayStillCastleKingside_ : blackMayStillCastleKingside_; }
 		bool mayCastleQueenside() const { return (turn_ == Color::White) ? whiteMayStillCastleQueenside_ : blackMayStillCastleQueenside_; }
 
+        void currentPlayerCannotCastleKingsideAnymore() {
+            if (turn_ == Color::White) {
+                whiteMayStillCastleKingside_ = false;
+            }
+            else {
+                blackMayStillCastleKingside_ = false;
+            }
+        }
+        void currentPlayerCannotCastleQueensideAnymore() {
+            if (turn_ == Color::White) {
+                whiteMayStillCastleQueenside_ = false;
+            }
+            else {
+                blackMayStillCastleQueenside_ = false;
+            }
+        }
+
+        void swapTurn() { turn_ = ((turn_ == Color::White) ? Color::Black : Color::White); }
+
 		// returns true if the square is attacked by the opposing player (the player whose turn it is not)
 		bool isSquareAttacked(ChessSquare square) const;
+        bool isKingAttacked() const;
 	private:
 		void setBoardTo8by8() {
 			board_ = std::vector< std::vector<PieceCode> >(8);

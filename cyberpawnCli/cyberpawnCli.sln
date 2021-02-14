@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cyberpawnCli", "cyberpawnCl
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cyberpawn", "..\cyberpawnService\cyberpawn\cyberpawn.vcxproj", "{F06BDB98-1693-49B8-A747-1FB10645E9C2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cyberpawnTest", "..\cyberpawnService\cyberpawnTest\cyberpawnTest.vcxproj", "{B664C403-F59A-4AC6-A500-1D4ECFDB4A33}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,10 @@ Global
 		{F06BDB98-1693-49B8-A747-1FB10645E9C2}.Debug|x64.Build.0 = Debug|x64
 		{F06BDB98-1693-49B8-A747-1FB10645E9C2}.Release|x64.ActiveCfg = Release|x64
 		{F06BDB98-1693-49B8-A747-1FB10645E9C2}.Release|x64.Build.0 = Release|x64
+		{B664C403-F59A-4AC6-A500-1D4ECFDB4A33}.Debug|x64.ActiveCfg = Debug|x64
+		{B664C403-F59A-4AC6-A500-1D4ECFDB4A33}.Debug|x64.Build.0 = Debug|x64
+		{B664C403-F59A-4AC6-A500-1D4ECFDB4A33}.Release|x64.ActiveCfg = Release|x64
+		{B664C403-F59A-4AC6-A500-1D4ECFDB4A33}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,7 +1,7 @@
 #ifndef CYBERPAWN_CYBERPAWN_CLI_CYBERPAWN_CLI_H_INCLUDED
 #define CYBERPAWN_CYBERPAWN_CLI_CYBERPAWN_CLI_H_INCLUDED
 
-#include "ChessGame.hpp"
+#include "cyberpawn/ChessGame.hpp"
 
 namespace cyberpawn {
 

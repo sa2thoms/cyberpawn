@@ -5,8 +5,10 @@
 #include "ChessPosition.hpp"
 #include "ChessMove.hpp"
 
+#include <optional>
+
 namespace cyberpawn {
-	bool isLegalMove(const ChessPosition & position, const ChessMove & move);
+    std::optional<ChessPosition> makeMoveIfLegal(const ChessPosition & position, const ChessMove & move);
 }
 
 

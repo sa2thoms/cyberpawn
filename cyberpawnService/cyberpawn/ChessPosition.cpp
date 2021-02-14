@@ -1,5 +1,6 @@
 #include "cyberpawn/ChessPosition.hpp"
 
+#include <optional>
 
 namespace cyberpawn {
 
@@ -7,40 +8,40 @@ namespace cyberpawn {
 		this->setBoardToEmpty();
 
 		board_[0][0] = PieceCode::whiteRook;
-		board_[0][1] = PieceCode::whiteKnight;
-		board_[0][2] = PieceCode::whiteBishop;
-		board_[0][3] = PieceCode::whiteKing;
-		board_[0][4] = PieceCode::whiteQueen;
-		board_[0][5] = PieceCode::whiteBishop;
-		board_[0][6] = PieceCode::whiteKnight;
-		board_[0][7] = PieceCode::whiteRook;
+        board_[1][0] = PieceCode::whiteKnight;
+        board_[2][0] = PieceCode::whiteBishop;
+        board_[3][0] = PieceCode::whiteQueen;
+        board_[4][0] = PieceCode::whiteKing;
+        board_[5][0] = PieceCode::whiteBishop;
+        board_[6][0] = PieceCode::whiteKnight;
+        board_[7][0] = PieceCode::whiteRook;
 
-		board_[1][0] = PieceCode::whitePawn;
-		board_[1][1] = PieceCode::whitePawn;
-		board_[1][2] = PieceCode::whitePawn;
-		board_[1][3] = PieceCode::whitePawn;
-		board_[1][4] = PieceCode::whitePawn;
-		board_[1][5] = PieceCode::whitePawn;
-		board_[1][6] = PieceCode::whitePawn;
-		board_[1][7] = PieceCode::whitePawn;
+		board_[0][1] = PieceCode::whitePawn;
+        board_[1][1] = PieceCode::whitePawn;
+        board_[2][1] = PieceCode::whitePawn;
+        board_[3][1] = PieceCode::whitePawn;
+        board_[4][1] = PieceCode::whitePawn;
+        board_[5][1] = PieceCode::whitePawn;
+        board_[6][1] = PieceCode::whitePawn;
+        board_[7][1] = PieceCode::whitePawn;
 
-		board_[6][0] = PieceCode::blackPawn;
-		board_[6][1] = PieceCode::blackPawn;
-		board_[6][2] = PieceCode::blackPawn;
-		board_[6][3] = PieceCode::blackPawn;
-		board_[6][4] = PieceCode::blackPawn;
-		board_[6][5] = PieceCode::blackPawn;
-		board_[6][6] = PieceCode::blackPawn;
-		board_[6][7] = PieceCode::blackPawn;
+		board_[0][6] = PieceCode::blackPawn;
+        board_[1][6] = PieceCode::blackPawn;
+        board_[2][6] = PieceCode::blackPawn;
+        board_[3][6] = PieceCode::blackPawn;
+        board_[4][6] = PieceCode::blackPawn;
+        board_[5][6] = PieceCode::blackPawn;
+        board_[6][6] = PieceCode::blackPawn;
+        board_[7][6] = PieceCode::blackPawn;
 
-		board_[7][0] = PieceCode::blackRook;
-		board_[7][1] = PieceCode::blackKnight;
-		board_[7][2] = PieceCode::blackBishop;
-		board_[7][3] = PieceCode::blackKing;
-		board_[7][4] = PieceCode::blackQueen;
-		board_[7][5] = PieceCode::blackBishop;
-		board_[7][6] = PieceCode::blackKnight;
-		board_[7][7] = PieceCode::blackRook;
+		board_[0][7] = PieceCode::blackRook;
+        board_[1][7] = PieceCode::blackKnight;
+        board_[2][7] = PieceCode::blackBishop;
+        board_[3][7] = PieceCode::blackQueen;
+        board_[4][7] = PieceCode::blackKing;
+        board_[5][7] = PieceCode::blackBishop;
+        board_[6][7] = PieceCode::blackKnight;
+        board_[7][7] = PieceCode::blackRook;
 
 		fileInWhichAPawnMovedTwoSquaresThePreviousMove_ = std::nullopt;
 		whiteMayStillCastleKingside_ = true;
@@ -201,6 +202,7 @@ namespace cyberpawn {
 			while (withinBoard(square_to_check)) {
 				if (this->operator[](square_to_check) == PieceCode::noPiece) {
 					firstStep = false;
+                    square_to_check = square_to_check + direction;
 					continue;
 				}
 				else if (this->operator[](square_to_check).getColor() == opposingColor) {
@@ -222,5 +224,23 @@ namespace cyberpawn {
 		// all attack vectors have been checked, so we can safely say the square is not under attack.
 		return false;
 	}
+
+    bool ChessPosition::isKingAttacked() const {
+        PieceCode kingInQuestion = (turn_ == Color::White) ? PieceCode::whiteKing : PieceCode::blackKing;
+        std::optional<ChessSquare> positionOfKing;
+        for (int8_t f = 0; f < board_.size(); f++) {
+            for (int8_t r = 0; r < 8; r++) {
+                if (board_[f][r] == kingInQuestion) {
+                    positionOfKing = ChessSquare{ f, r };
+                }
+            }
+        }
+        if (positionOfKing) {
+            return isSquareAttacked(positionOfKing.value());
+        }
+        else {
+            return false;
+        }
+    }
 
 }

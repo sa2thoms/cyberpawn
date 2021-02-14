@@ -25,7 +25,7 @@ namespace cyberpawn {
 		}
 		else if (pieceCode.getColor() == Color::Black) {
 			// black score is the negative of the white score
-			return -standalonePieceScore(pieceCode & 0b11101111);
+			return -standalonePieceScore(pieceCode & int8_t(0b11101111));
 		}
 		else {
 			return 0.f;
@@ -48,7 +48,7 @@ namespace cyberpawn {
 	}
 
 	std::vector<ChessMove> BetaTreeEngine::findBestMoves(const ChessPosition & position, int maxMoves) const {
-
+        return {};
 	}
 
 }

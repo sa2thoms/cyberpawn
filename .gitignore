@@ -1,2 +1,20 @@
 .vs/
 
+*.idb
+*.exe
+*.lib
+*.pdb
+*.tlog
+*.exe.recipe
+*.log
+*.ilk
+*.obj
+*.gta.testdurations
+*.lib.recipe
+*.FileListAbsolute.txt
+
+**/x64/Debug/*.*
+**/x64/Release/*.*
+
+*/packages/
+

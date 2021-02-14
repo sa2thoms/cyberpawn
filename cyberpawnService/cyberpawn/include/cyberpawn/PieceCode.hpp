@@ -31,6 +31,7 @@ namespace cyberpawn {
 		int8_t code_;
 
 	public:
+        PieceCode() : code_(0) {}
 		PieceCode(int8_t code) : code_(code) {}
 
 		Color getColor() const {

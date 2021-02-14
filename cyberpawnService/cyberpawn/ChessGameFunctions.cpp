@@ -9,7 +9,7 @@ namespace cyberpawn {
 	}
 
 	// checks if the piece can move there under normal circumstances (e.g. it's along a bishop's diagonal)
-	bool isGeometricallyLegalMove(const ChessPosition & position, const ChessMove & move) {
+	bool makeMoveIfGeometricallyLegal(ChessPosition & position, const ChessMove & move) {
 		ChessSquare from = move.from;
 		ChessSquare to = move.to;
 
@@ -20,7 +20,7 @@ namespace cyberpawn {
 		
 		bool isValidSoFar = pieceToMove != PieceCode::noPiece
 			&& pieceColor == position.getTurn()
-			&& (pieceColor != position[to].getColor() || position[to] != PieceCode::noPiece);
+			&& (pieceColor != position[to].getColor() || position[to] == PieceCode::noPiece);
 		if (!isValidSoFar) { return false; }
 
 
@@ -40,6 +40,9 @@ namespace cyberpawn {
 				if (position[to.file][to.rank] != PieceCode::noPiece) {
 					return false;
 				}
+                position[to] = pieceToMove;
+                position[from] = PieceCode::noPiece;
+                position.setFileWherePawnJustMovedTwoSpacesForward(to.file);
 				return true;
 			}
 			else if ((to.rank - from.rank) == forwardDirection) {
@@ -47,6 +50,9 @@ namespace cyberpawn {
 					if (position[to.file][to.rank] != PieceCode::noPiece) {
 						return false;
 					}
+                    position[to] = pieceToMove;
+                    position[from] = PieceCode::noPiece;
+                    position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
 					return true;
 				}
 				else if (std::abs(to.file - from.file) == 1) {
@@ -56,9 +62,16 @@ namespace cyberpawn {
 						if (to.file != file_to_take_en_passant) {
 							return false;
 						}
-						if (to.rank != pawnStartRank + forwardDirection * 4) {
+						else if (to.rank != pawnStartRank + forwardDirection * 4) {
 							return false;
 						}
+                        else {
+                            position[to] = pieceToMove;
+                            position[from] = PieceCode::noPiece;
+                            position[{enPassantPossibleFile.value(), pawnStartRank + forwardDirection * 3}] = PieceCode::noPiece;
+                            position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
+                            return true;
+                        }
 					}
 					else if (position[to.file][to.rank] == PieceCode::noPiece) {
 						return false;
@@ -66,6 +79,9 @@ namespace cyberpawn {
 					if (position[to.file][to.rank].getColor() == position.getTurn()) {
 						return false;
 					}
+                    position[to] = pieceToMove;
+                    position[from] = PieceCode::noPiece;
+                    position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
 					return true;
 				}
 				else {
@@ -99,9 +115,15 @@ namespace cyberpawn {
 				square_to_check = square_to_check + increment;
 			}
 			if (position[square_to_check] == PieceCode::noPiece) {
+                position[to] = pieceToMove;
+                position[from] = PieceCode::noPiece;
+                position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
 				return true;
 			}
 			else if (position[square_to_check].getColor() != position.getTurn()) {
+                position[to] = pieceToMove;
+                position[from] = PieceCode::noPiece;
+                position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
 				return true;
 			}
 			else {
@@ -110,7 +132,10 @@ namespace cyberpawn {
 		}
 		else if (pieceToMove.isKnight()) {
 			if (math::square(to.file - from.file) + math::square(to.rank - from.rank) == 5) {
-				return true;
+                position[to] = pieceToMove;
+                position[from] = PieceCode::noPiece;
+                position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
+                return true;
 			}
 			else {
 				return false;
@@ -130,9 +155,27 @@ namespace cyberpawn {
 					square_to_check.rank += increment;
 				}
 				if (position[square_to_check] == PieceCode::noPiece) {
+                    position[to] = pieceToMove;
+                    position[from] = PieceCode::noPiece;
+                    position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
+                    if (from.file == 0) {
+                        position.currentPlayerCannotCastleQueensideAnymore();
+                    }
+                    if (from.file == 7) {
+                        position.currentPlayerCannotCastleKingsideAnymore();
+                    }
 					return true;
 				}
 				else if (position[square_to_check].getColor() != position.getTurn()) {
+                    position[to] = pieceToMove;
+                    position[from] = PieceCode::noPiece;
+                    position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
+                    if (from.file == 0) {
+                        position.currentPlayerCannotCastleQueensideAnymore();
+                    }
+                    if (from.file == 7) {
+                        position.currentPlayerCannotCastleKingsideAnymore();
+                    }
 					return true;
 				}
 				else return false;
@@ -150,9 +193,27 @@ namespace cyberpawn {
 					square_to_check.file += increment;
 				}
 				if (position[square_to_check] == PieceCode::noPiece) {
+                    position[to] = pieceToMove;
+                    position[from] = PieceCode::noPiece;
+                    position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
+                    if (from.file == 0) {
+                        position.currentPlayerCannotCastleQueensideAnymore();
+                    }
+                    if (from.file == 7) {
+                        position.currentPlayerCannotCastleKingsideAnymore();
+                    }
 					return true;
 				}
 				else if (position[square_to_check].getColor() != position.getTurn()) {
+                    position[to] = pieceToMove;
+                    position[from] = PieceCode::noPiece;
+                    position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
+                    if (from.file == 0) {
+                        position.currentPlayerCannotCastleQueensideAnymore();
+                    }
+                    if (from.file == 7) {
+                        position.currentPlayerCannotCastleKingsideAnymore();
+                    }
 					return true;
 				}
 				else return false;
@@ -180,9 +241,15 @@ namespace cyberpawn {
 				square_to_check = square_to_check + increment;
 			}
 			if (position[square_to_check] == PieceCode::noPiece) {
+                position[to] = pieceToMove;
+                position[from] = PieceCode::noPiece;
+                position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
 				return true;
 			}
 			else if (position[square_to_check].getColor() != position.getTurn()) {
+                position[to] = pieceToMove;
+                position[from] = PieceCode::noPiece;
+                position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
 				return true;
 			}
 			else {
@@ -195,6 +262,8 @@ namespace cyberpawn {
 
 			int8_t castleRank = (position.getTurn() == Color::White) ? 0 : 7;
 			ChessSquare castleStartSquare = ChessSquare{ 4, castleRank };
+            ChessSquare kingsideCastleRookStartSquare = ChessSquare{ 7, castleRank };
+            ChessSquare queensideCastleRookStartSquare = ChessSquare{ 0, castleRank };
 			ChessSquare kingsideCastlePassthroughSquare = ChessSquare{ 5, castleRank };
 			ChessSquare queensideCastlePassthroughSquare = ChessSquare{ 3, castleRank };
 			ChessSquare kingsideCastleEndSquare = ChessSquare{ 6, castleRank };
@@ -209,6 +278,13 @@ namespace cyberpawn {
 					return false;
 				}
 				else {
+                    position[to] = pieceToMove;
+                    position[from] = PieceCode::noPiece;
+                    position[kingsideCastlePassthroughSquare] = position[kingsideCastleRookStartSquare];
+                    position[kingsideCastleRookStartSquare] = PieceCode::noPiece;
+                    position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
+                    position.currentPlayerCannotCastleKingsideAnymore();
+                    position.currentPlayerCannotCastleQueensideAnymore();
 					return true;
 				}
 			}
@@ -220,6 +296,13 @@ namespace cyberpawn {
 					return false;
 				}
 				else {
+                    position[to] = pieceToMove;
+                    position[from] = PieceCode::noPiece;
+                    position[queensideCastlePassthroughSquare] = position[queensideCastleRookStartSquare];
+                    position[queensideCastleRookStartSquare] = PieceCode::noPiece;
+                    position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
+                    position.currentPlayerCannotCastleKingsideAnymore();
+                    position.currentPlayerCannotCastleQueensideAnymore();
 					return true;
 				}
 			}
@@ -231,19 +314,30 @@ namespace cyberpawn {
 				return false;
 			}
 			
+            position[to] = pieceToMove;
+            position[from] = PieceCode::noPiece;
+            position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
+            position.currentPlayerCannotCastleKingsideAnymore();
+            position.currentPlayerCannotCastleQueensideAnymore();
 			return true;
 		}
+        else {
+            return false;
+        }
 	}
 
-
-
-	bool isLegalMove(const ChessPosition & position, const ChessMove & move) {
-		bool geometricallyLegal = isGeometricallyLegalMove(position, move);
-
-		// also have to make sure the king isn't left attacked after the move
-
-
-	}
+    std::optional<ChessPosition> makeMoveIfLegal(const ChessPosition & position, const ChessMove & move) {
+        ChessPosition copyOfPosition = position;
+        bool gemoetricallyLegal = makeMoveIfGeometricallyLegal(copyOfPosition, move);
+        bool kingLeftAttacked = copyOfPosition.isKingAttacked();
+        if (gemoetricallyLegal && !kingLeftAttacked) {
+            copyOfPosition.swapTurn();
+            return copyOfPosition;
+        }
+        else {
+            return std::nullopt;
+        }
+    }
 }
 
 
