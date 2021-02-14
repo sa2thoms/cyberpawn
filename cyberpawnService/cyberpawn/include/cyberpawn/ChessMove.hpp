@@ -3,6 +3,9 @@
 
 #include <cstdint>
 
+#include <optional>
+#include <string>
+
 namespace cyberpawn {
 
 	struct ChessSquare {
@@ -24,6 +27,25 @@ namespace cyberpawn {
 		ChessSquare from;
 		ChessSquare to;
 	};
+
+	inline std::string moveToString(const ChessMove & move) {
+		std::string ret = "";
+		ret.push_back(move.from.file + 'A');
+		ret.push_back(move.from.rank + '1');
+		ret.append(" to ");
+		ret.push_back(move.to.file + 'A');
+		ret.push_back(move.to.rank + '1');
+		return ret;
+	}
+
+	inline std::optional<ChessSquare> squareFromString(const std::string & s) {
+		if (s.size() != 2 || s[0] < 'a' || s[0] > 'h' || s[1] < '1' || s[2] > '8') {
+			return std::nullopt;
+		}
+		else {
+			return ChessSquare{ s[0] - 'a', s[1] - '1' };
+		}
+	}
 
 }
 

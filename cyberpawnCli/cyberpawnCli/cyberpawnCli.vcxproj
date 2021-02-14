@@ -82,10 +82,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CyberpawnCli.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CyberpawnCli.hpp" />
+    <ClInclude Include="StringUtilities.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\cyberpawnService\cyberpawn\cyberpawn.vcxproj">

@@ -55,8 +55,8 @@ namespace cyberpawn {
     std::pair<ChessMove, float> findBestMove(const ChessPosition & position, int depth) {
         std::vector<ChessMove> possibleMoves = collectPotentialMoves(position);
         std::function<bool(float, float)> isScoreBetterThan = (position.getTurn() == Color::White)
-            ? std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { scoreA > scoreB; })
-            : std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { scoreA < scoreB; });
+            ? std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { return scoreA > scoreB; })
+            : std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { return scoreA < scoreB; });
 
         std::pair<ChessMove, float> bestFoundSoFar = {
             {{0, 0}, {0, 0}}, (position.getTurn() == Color::White) ? -INFINITY : INFINITY
@@ -83,8 +83,8 @@ namespace cyberpawn {
 	std::vector<ChessMove> BetaTreeEngine::findBestMoves(const ChessPosition & position, int maxMoves) const {
         std::vector<ChessMove> possibleMoves = collectPotentialMoves(position);
         std::function<bool(float, float)> isScoreBetterThan = (position.getTurn() == Color::White)
-            ? std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { scoreA > scoreB; })
-            : std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { scoreA < scoreB; });
+            ? std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { return scoreA > scoreB; })
+            : std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { return scoreA < scoreB; });
 
         std::vector<std::pair<ChessMove, float>> validMoves;
 
@@ -114,6 +114,10 @@ namespace cyberpawn {
                 return pair.first;
             }
         );
+
+        if (sortedMoves.size() > maxMoves) {
+            sortedMoves.resize(maxMoves);
+        }
 
         return sortedMoves;
 	}

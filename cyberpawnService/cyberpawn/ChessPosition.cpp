@@ -1,5 +1,7 @@
 #include "cyberpawn/ChessPosition.hpp"
 
+#include "cyberpawn/ChessGameFunctions.hpp"
+
 #include <optional>
 
 namespace cyberpawn {

@@ -367,8 +367,8 @@ namespace cyberpawn {
                     if (piece.isPawn() || piece.isKing()) {
                         for (int8_t x = -2; x < 3; x++) {
                             for (int8_t y = -2; y < 3; y++) {
-                                if (std::abs(x) + std::abs(y) <= 2) {
-                                    ret.push_back({ {f, r}, {x, y} });
+                                if ((std::abs(x) + std::abs(y)) <= 2) {
+                                    ret.push_back({ {f, r}, {f + x, r + y} });
                                 }
                             }
                         }
