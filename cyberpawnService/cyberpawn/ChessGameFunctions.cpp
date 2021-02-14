@@ -69,7 +69,7 @@ namespace cyberpawn {
 				}
 				else if (std::abs(to.file - from.file) == 1) {
 					auto enPassantPossibleFile = position.fileInWhichAPawnMovedTwoSquaresThePreviousMove();
-					if (enPassantPossibleFile) {
+					if (enPassantPossibleFile && position[to] == PieceCode::noPiece) {
 						int8_t file_to_take_en_passant = enPassantPossibleFile.value();
 						if (to.file != file_to_take_en_passant) {
 							return false;

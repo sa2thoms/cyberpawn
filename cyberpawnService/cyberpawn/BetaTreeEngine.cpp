@@ -52,7 +52,7 @@ namespace cyberpawn {
 		return score_total;
 	}
 
-    std::pair<ChessMove, float> findBestMove(const ChessPosition & position, int depth) {
+    std::pair<ChessMove, float> findBestMove(const ChessPosition & position, int depth, float parentBestScoreReached) {
         std::vector<ChessMove> possibleMoves = collectPotentialMoves(position);
         std::function<bool(float, float)> isScoreBetterThan = (position.getTurn() == Color::White)
             ? std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { return scoreA > scoreB; })
@@ -64,15 +64,20 @@ namespace cyberpawn {
 
         std::function<float(const ChessPosition &)> calculateScore =
             (depth <= 1) ? std::function<float(const ChessPosition &)>([](const ChessPosition & position) -> float {return calculateStaticPositionScore(position); })
-            : std::function<float(const ChessPosition &)>([&depth](const ChessPosition & position) -> float {return findBestMove(position, depth - 1).second; });
+            : std::function<float(const ChessPosition &)>([&depth, &bestFoundSoFar](const ChessPosition & position) -> float {return findBestMove(position, depth - 1, bestFoundSoFar.second).second; });
 
-
+        
         for (const ChessMove & move : possibleMoves) {
             auto newPosition = makeMoveIfLegal(position, move);
             if (newPosition) {
                 float score = calculateScore(newPosition.value());
                 if (isScoreBetterThan(score, bestFoundSoFar.second)) {
                     bestFoundSoFar = { move, score };
+
+                    // alpha-beta pruning
+                    if (isScoreBetterThan(bestFoundSoFar.second, parentBestScoreReached)) {
+                        break;
+                    }
                 }
             }
         }
@@ -91,7 +96,7 @@ namespace cyberpawn {
         for (auto move : possibleMoves) {
             auto newPosition = makeMoveIfLegal(position, move);
             if (newPosition) {
-                float score = findBestMove(newPosition.value(), searchDepth_ - 1).second;
+                float score = findBestMove(newPosition.value(), searchDepth_ - 1, (position.getTurn() == Color::White) ? -INFINITY : INFINITY).second;
                 validMoves.push_back({ move, score });
             }
         }

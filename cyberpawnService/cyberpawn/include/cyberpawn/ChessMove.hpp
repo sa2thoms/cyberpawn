@@ -26,6 +26,13 @@ namespace cyberpawn {
 	struct ChessMove {
 		ChessSquare from;
 		ChessSquare to;
+
+		bool operator==(const ChessMove & other) const {
+			return (from == other.from) && (to == other.to);
+		}
+		bool operator!=(const ChessMove & other) const {
+			return !(*this == other);
+		}
 	};
 
 	inline std::string moveToString(const ChessMove & move) {

@@ -123,3 +123,26 @@ TEST(ChessGameFunctionsTest, blackCannotMoveLeavingHisKingInCheck) {
     EXPECT_EQ(position[(ChessSquare{ 3, 0 })], PieceCode::noPiece);
     EXPECT_EQ(position[(ChessSquare{ 7, 4 })], PieceCode::whiteQueen);
 }
+
+TEST(ChessGameFunctionsTest, canTakeAnotherPieceWithAPawnWhenEnPassantIsAvailable) {
+    ChessPosition position;
+    std::vector<ChessMove> legalMoves = {
+        { {4, 1}, {4, 3} },
+        { {3, 6}, {3, 4} },
+        { {4, 3}, {3, 4} },
+        { {0, 6}, {0, 5} },
+        { {7, 1}, {7, 2} },
+        { {4, 6}, {4, 5} },
+        { {3, 1}, {3, 3} },
+        { {4, 5}, {3, 4} }
+    };
+
+    for (const auto & move : legalMoves) {
+        auto newPosition = makeMoveIfLegal(position, move);
+        EXPECT_TRUE(newPosition.has_value());
+        position = newPosition.value();
+    }
+
+    EXPECT_EQ(position[(ChessSquare{ 3, 3 })], PieceCode::whitePawn);
+    EXPECT_EQ(position[(ChessSquare{ 3, 4 })], PieceCode::blackPawn);
+}
