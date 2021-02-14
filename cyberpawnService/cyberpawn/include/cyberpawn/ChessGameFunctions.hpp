@@ -8,7 +8,16 @@
 #include <optional>
 
 namespace cyberpawn {
+
+    bool withinBoard(ChessSquare square);
+
+    // if the move is legal, a new position with the move made is returned. If the
+    // move is illegal, then std::nullopt is returned.
     std::optional<ChessPosition> makeMoveIfLegal(const ChessPosition & position, const ChessMove & move);
+
+
+    // Returns a vector of moves that may or may not be legal
+    std::vector<ChessMove> collectPotentialMoves(const ChessPosition & position);
 }
 
 

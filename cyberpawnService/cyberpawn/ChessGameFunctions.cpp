@@ -8,12 +8,24 @@ namespace cyberpawn {
 		T square(T a) { return a * a; }
 	}
 
+
+    bool withinBoard(ChessSquare square) {
+        if (square.file > 7 || square.rank > 7 || square.file < 0 || square.rank < 0) {
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+
 	// checks if the piece can move there under normal circumstances (e.g. it's along a bishop's diagonal)
 	bool makeMoveIfGeometricallyLegal(ChessPosition & position, const ChessMove & move) {
 		ChessSquare from = move.from;
 		ChessSquare to = move.to;
 
 		if (to == from) return false;
+        if (!withinBoard(to)) return false;
+        if (!withinBoard(from)) return false;
 
 		PieceCode pieceToMove = position[from.file][from.rank];
 		Color pieceColor = pieceToMove.getColor();
@@ -338,6 +350,72 @@ namespace cyberpawn {
             return std::nullopt;
         }
     }
+
+    /*
+    * This function is designed to collect possible moves in an efficient way,
+    * balancing how pruned the set of moves is with how quick this function is.
+    * This function is required to return a superset of all legal moves. It may not miss any.
+    */
+    std::vector<ChessMove> collectPotentialMoves(const ChessPosition & position) {
+        std::vector<ChessMove> ret = {};
+
+        Color turn = position.getTurn();
+        for (int8_t f = 0; f < 8; f++) {
+            for (int8_t r = 0; r < 8; r++) {
+                PieceCode piece = position[f][r];
+                if (piece != 0 && piece.getColor() == turn) {
+                    if (piece.isPawn() || piece.isKing()) {
+                        for (int8_t x = -2; x < 3; x++) {
+                            for (int8_t y = -2; y < 3; y++) {
+                                if (std::abs(x) + std::abs(y) <= 2) {
+                                    ret.push_back({ {f, r}, {x, y} });
+                                }
+                            }
+                        }
+                    }
+                    if (piece.isKnight()) {
+                        ret.push_back({ {f, r}, {f - 2, r - 1} });
+                        ret.push_back({ {f, r}, {f - 2, r + 1} });
+                        ret.push_back({ {f, r}, {f + 2, r - 1} });
+                        ret.push_back({ {f, r}, {f + 2, r + 1} });
+                        ret.push_back({ {f, r}, {f - 1, r - 2} });
+                        ret.push_back({ {f, r}, {f - 1, r + 2} });
+                        ret.push_back({ {f, r}, {f + 1, r - 2} });
+                        ret.push_back({ {f, r}, {f + 1, r + 2} });
+                    }
+                    if (piece.isBishop() || piece.isQueen()) {
+                        std::vector<ChessSquare> directions = {
+                            {-1, -1}, {-1, 1}, {1, -1}, {1, 1}
+                        };
+                        for (auto direction : directions) {
+                            ChessSquare square_to_check = ChessSquare{ f, r } + direction;
+                            while (withinBoard(square_to_check)) {
+                                ret.push_back({ { f, r }, square_to_check });
+                                if (position[square_to_check] != PieceCode::noPiece) break;
+                                square_to_check = square_to_check + direction;
+                            }
+                        }
+                    }
+                    if (piece.isRook() || piece.isQueen()) {
+                        std::vector<ChessSquare> directions = {
+                            {-1, 0}, {1, 0}, {0, -1}, {0, 1}
+                        };
+                        for (auto direction : directions) {
+                            ChessSquare square_to_check = ChessSquare{ f, r } + direction;
+                            while (withinBoard(square_to_check)) {
+                                ret.push_back({ { f, r }, square_to_check });
+                                if (position[square_to_check] != PieceCode::noPiece) break;
+                                square_to_check = square_to_check + direction;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
 }
 
 

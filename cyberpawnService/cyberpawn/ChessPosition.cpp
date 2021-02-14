@@ -52,14 +52,6 @@ namespace cyberpawn {
 		turn_ = Color::White;
 	}
 
-	bool withinBoard(ChessSquare square) {
-		if (square.file > 7 || square.rank > 7 || square.file < 0 || square.rank < 0) {
-			return false;
-		}
-		else {
-			return true;
-		}
-	}
 
 	bool ChessPosition::isSquareAttacked(ChessSquare square) const {
 		// Attacks can come from a diagonal, a straight line, or a knight attack.

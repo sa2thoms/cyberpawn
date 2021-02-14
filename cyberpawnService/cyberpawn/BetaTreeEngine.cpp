@@ -1,5 +1,10 @@
 #include "cyberpawn/BetaTreeEngine.hpp"
 
+#include "cyberpawn/ChessGameFunctions.hpp"
+
+#include <functional>
+#include <algorithm>
+#include <iterator>
 
 namespace cyberpawn {
 
@@ -47,8 +52,70 @@ namespace cyberpawn {
 		return score_total;
 	}
 
+    std::pair<ChessMove, float> findBestMove(const ChessPosition & position, int depth) {
+        std::vector<ChessMove> possibleMoves = collectPotentialMoves(position);
+        std::function<bool(float, float)> isScoreBetterThan = (position.getTurn() == Color::White)
+            ? std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { scoreA > scoreB; })
+            : std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { scoreA < scoreB; });
+
+        std::pair<ChessMove, float> bestFoundSoFar = {
+            {{0, 0}, {0, 0}}, (position.getTurn() == Color::White) ? -INFINITY : INFINITY
+        };
+
+        std::function<float(const ChessPosition &)> calculateScore =
+            (depth <= 1) ? std::function<float(const ChessPosition &)>([](const ChessPosition & position) -> float {return calculateStaticPositionScore(position); })
+            : std::function<float(const ChessPosition &)>([&depth](const ChessPosition & position) -> float {return findBestMove(position, depth - 1).second; });
+
+
+        for (const ChessMove & move : possibleMoves) {
+            auto newPosition = makeMoveIfLegal(position, move);
+            if (newPosition) {
+                float score = calculateScore(newPosition.value());
+                if (isScoreBetterThan(score, bestFoundSoFar.second)) {
+                    bestFoundSoFar = { move, score };
+                }
+            }
+        }
+
+        return bestFoundSoFar;
+    }
+
 	std::vector<ChessMove> BetaTreeEngine::findBestMoves(const ChessPosition & position, int maxMoves) const {
-        return {};
+        std::vector<ChessMove> possibleMoves = collectPotentialMoves(position);
+        std::function<bool(float, float)> isScoreBetterThan = (position.getTurn() == Color::White)
+            ? std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { scoreA > scoreB; })
+            : std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { scoreA < scoreB; });
+
+        std::vector<std::pair<ChessMove, float>> validMoves;
+
+        for (auto move : possibleMoves) {
+            auto newPosition = makeMoveIfLegal(position, move);
+            if (newPosition) {
+                float score = findBestMove(newPosition.value(), searchDepth_ - 1).second;
+                validMoves.push_back({ move, score });
+            }
+        }
+        
+        std::sort(
+            validMoves.begin(),
+            validMoves.end(),
+            [&isScoreBetterThan](const std::pair<ChessMove, float> & a, const std::pair<ChessMove, float> & b) {
+                return isScoreBetterThan(a.second, b.second);
+            }
+        );
+
+        std::vector<ChessMove> sortedMoves;
+
+        std::transform(
+            validMoves.begin(),
+            validMoves.end(),
+            std::back_inserter(sortedMoves),
+            [](const std::pair<ChessMove, float> & pair) {
+                return pair.first;
+            }
+        );
+
+        return sortedMoves;
 	}
 
 }
