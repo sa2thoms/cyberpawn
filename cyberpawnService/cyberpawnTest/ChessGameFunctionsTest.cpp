@@ -32,3 +32,94 @@ TEST(ChessGameFunctionsTest, aSeriesOfPawnMovesWorksCorrectly) {
     EXPECT_EQ(position[(ChessSquare{ 4, 5 })], PieceCode::blackPawn);
     EXPECT_EQ(position[(ChessSquare{ 3, 3 })], PieceCode::whitePawn);
 }
+
+TEST(ChessGameFunctionsTest, pawnCannotTakeForward) {
+    ChessPosition position;
+    std::vector<ChessMove> moves = {
+        { {4, 1}, {4, 3} },
+        { {4, 6}, {4, 4} },
+        { {4, 3}, {4, 4} }
+    };
+
+    
+    auto newPosition = makeMoveIfLegal(position, moves[0]);
+    EXPECT_TRUE(newPosition.has_value());
+    newPosition = makeMoveIfLegal(newPosition.value(), moves[1]);
+    EXPECT_TRUE(newPosition.has_value());
+    position = newPosition.value();
+    newPosition = makeMoveIfLegal(newPosition.value(), moves[2]);
+    EXPECT_FALSE(newPosition.has_value());
+    
+
+    EXPECT_EQ(position[(ChessSquare{ 4, 4 })], PieceCode::blackPawn);
+    EXPECT_EQ(position[(ChessSquare{ 4, 3 })], PieceCode::whitePawn);
+}
+
+TEST(ChessGameFunctionsTest, pawnCanTakeEnPassant) {
+    ChessPosition position;
+    std::vector<ChessMove> moves = {
+        { {4, 1}, {4, 3} },
+        { {3, 6}, {3, 4} },
+        { {4, 3}, {4, 4} },
+        { {5, 6}, {5, 4} },
+        { {4, 4}, {5, 5} }
+    };
+
+    for (const auto & move : moves) {
+        auto newPosition = makeMoveIfLegal(position, move);
+        EXPECT_TRUE(newPosition.has_value());
+        position = newPosition.value();
+    }
+
+    EXPECT_EQ(position[(ChessSquare{ 4, 4 })], PieceCode::noPiece);
+    EXPECT_EQ(position[(ChessSquare{ 5, 5 })], PieceCode::whitePawn);
+    EXPECT_EQ(position[(ChessSquare{ 5, 4 })], PieceCode::noPiece);
+}
+
+TEST(ChessGameFunctionsTest, pawnCannotTakeEnPassantDelayed) {
+    ChessPosition position;
+    std::vector<ChessMove> legalMoves = {
+        { {4, 1}, {4, 3} },
+        { {3, 6}, {3, 4} },
+        { {4, 3}, {4, 4} },
+        { {5, 6}, {5, 4} }
+    };
+
+    ChessMove illegalMove = { {4, 4}, {3, 5} };
+
+    for (const auto & move : legalMoves) {
+        auto newPosition = makeMoveIfLegal(position, move);
+        EXPECT_TRUE(newPosition.has_value());
+        position = newPosition.value();
+    }
+
+    auto newPosition = makeMoveIfLegal(position, illegalMove);
+    EXPECT_FALSE(newPosition.has_value());
+
+    EXPECT_EQ(position[(ChessSquare{ 4, 4 })], PieceCode::whitePawn);
+    EXPECT_EQ(position[(ChessSquare{ 3, 4 })], PieceCode::blackPawn);
+    EXPECT_EQ(position[(ChessSquare{ 3, 5 })], PieceCode::noPiece);
+}
+
+TEST(ChessGameFunctionsTest, blackCannotMoveLeavingHisKingInCheck) {
+    ChessPosition position;
+    std::vector<ChessMove> legalMoves = {
+        { {4, 1}, {4, 3} },
+        { {5, 6}, {5, 4} },
+        { {3, 0}, {7, 4} }
+    };
+
+    ChessMove illegalMove = { {0, 6}, {0, 5} };
+
+    for (const auto & move : legalMoves) {
+        auto newPosition = makeMoveIfLegal(position, move);
+        EXPECT_TRUE(newPosition.has_value());
+        position = newPosition.value();
+    }
+
+    auto newPosition = makeMoveIfLegal(position, illegalMove);
+    EXPECT_FALSE(newPosition.has_value());
+
+    EXPECT_EQ(position[(ChessSquare{ 3, 0 })], PieceCode::noPiece);
+    EXPECT_EQ(position[(ChessSquare{ 7, 4 })], PieceCode::whiteQueen);
+}
