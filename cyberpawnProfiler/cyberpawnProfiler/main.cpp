@@ -7,13 +7,73 @@
 
 using namespace cyberpawn;
 
+std::string pieceCodeAsString(const PieceCode & code) {
+    switch (code.asChar()) {
+    case PieceCode::whitePawn:
+        return "wpa";
+    case PieceCode::whiteBishop:
+        return "wbi";
+    case PieceCode::whiteKnight:
+        return "wkn";
+    case PieceCode::whiteRook:
+        return "wro";
+    case PieceCode::whiteQueen:
+        return "WQu";
+    case PieceCode::whiteKing:
+        return "WKi";
+    case PieceCode::blackPawn:
+        return "bpa";
+    case PieceCode::blackBishop:
+        return "bbi";
+    case PieceCode::blackKnight:
+        return "bkn";
+    case PieceCode::blackRook:
+        return "bro";
+    case PieceCode::blackQueen:
+        return "BQu";
+    case PieceCode::blackKing:
+        return "BKi";
+    default:
+        return "   ";
+    }
+}
+
+void printPosition(const ChessPosition & position) {
+    for (int r = 0; r < 8; r++) {
+        for (int f = 0; f < 8; f++) {
+            std::cout << "+-----";
+        }
+        std::cout << "+" << std::endl;
+        for (int f = 0; f < 8; f++) {
+            std::cout << "|     ";
+        }
+        std::cout << "|" << std::endl;
+        for (int f = 0; f < 8; f++) {
+            std::cout << "| " << pieceCodeAsString(position[f][r]) << " ";
+        }
+        std::cout << "|" << std::endl;
+        for (int f = 0; f < 8; f++) {
+            std::cout << "|     ";
+        }
+        std::cout << "|" << std::endl;
+    }
+    for (int f = 0; f < 8; f++) {
+        std::cout << "+-----";
+    }
+    std::cout << "+" << std::endl;
+}
+
 ChessGame::State enginesPlayEachother(const Engine & enginePlayingWhite, const Engine & enginePlayingBlack) {
     ChessGame game;
+
+    printPosition(game.getPosition());
 
     while (!game.isOver()) {
         const Engine & enginePlayingAMove = (game.whoseTurn() == Color::White) ? enginePlayingWhite : enginePlayingBlack;
         auto bestMoves = enginePlayingAMove.findBestMoves(game.getPosition(), 5);
         bool succeeded = game.makeMove(bestMoves[0]);
+        
+        printPosition(game.getPosition());
         if (!succeeded) {
             throw cyberpawn::Exception("someone tried to make an illegal move.");
         }
@@ -40,8 +100,8 @@ std::string gameStateToString(ChessGame::State state) {
 }
 
 int main() {
-    BetaTreeEngine whiteEngine(3);
-    BetaTreeEngine blackEngine(3);
+    BetaTreeEngine whiteEngine(4);
+    BetaTreeEngine blackEngine(4);
 
     auto start = std::chrono::high_resolution_clock::now();
 

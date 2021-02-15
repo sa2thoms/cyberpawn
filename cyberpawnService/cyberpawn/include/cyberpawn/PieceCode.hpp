@@ -67,6 +67,8 @@ namespace cyberpawn {
         bool isKing() const {
             return (code_ & 0b11101111) == whiteKing;
         }
+
+        int8_t asChar() const { return code_; }
     };
 
 
