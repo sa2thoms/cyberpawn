@@ -103,8 +103,8 @@ int main() {
     BetaTreeEngine whiteEngine(4);
     BetaTreeEngine blackEngine(4);
 
-    // whiteEngine.setAllowMultipleThreads(true);
-    // blackEngine.setAllowMultipleThreads(true);
+    whiteEngine.setAllowMultipleThreads(true);
+    blackEngine.setAllowMultipleThreads(true);
 
     auto start = std::chrono::high_resolution_clock::now();
 

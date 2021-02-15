@@ -54,142 +54,255 @@ namespace cyberpawn {
         turn_ = Color::White;
     }
 
+    namespace attackDirectionLookUpTables {
 
-    bool ChessPosition::isSquareAttacked(ChessSquare square) const {
-        // Attacks can come from a diagonal, a straight line, or a knight attack.
-        // Note that kings and pawns still attack along a diagonal or straight line.
-
-        Color opposingColor = (turn_ == Color::White) ? Color::Black : Color::White;
-        
-        int8_t colorMask = (opposingColor == Color::White) ? 0b00000000 : 0b00010000;
-
-        // direction of opposing pawns
-        int8_t pawnForwardDirection = (opposingColor == Color::White) ? 1 : -1;
-
-        std::vector< std::pair<ChessSquare, std::vector< std::pair <PieceCode, bool> > > > directionsOfAttack = {
+        const std::vector< std::pair<ChessSquare, std::vector< std::pair <PieceCode, bool> > > > directionsOfAttack_white = {
             {
                 {-1, -1},
                 {
-                    {PieceCode::whiteBishop | colorMask, true},
-                    {PieceCode::whiteQueen | colorMask, true},
-                    {PieceCode::whiteKing | colorMask, false}
+                    {PieceCode::whiteBishop, true},
+                    {PieceCode::whiteQueen, true},
+                    {PieceCode::whiteKing, false},
+                    {PieceCode::whitePawn, false}
                 }
             },
             {
                 {-1, 0},
                 {
-                    {PieceCode::whiteRook | colorMask, true},
-                    {PieceCode::whiteQueen | colorMask, true},
-                    {PieceCode::whiteKing | colorMask, false}
+                    {PieceCode::whiteRook, true},
+                    {PieceCode::whiteQueen, true},
+                    {PieceCode::whiteKing, false}
                 }
             },
             {
                 {-1, 1},
                 {
-                    {PieceCode::whiteBishop | colorMask, true},
-                    {PieceCode::whiteQueen | colorMask, true},
-                    {PieceCode::whiteKing | colorMask, false}
+                    {PieceCode::whiteBishop, true},
+                    {PieceCode::whiteQueen, true},
+                    {PieceCode::whiteKing, false}
                 }
             },
             {
                 {0, -1},
                 {
-                    {PieceCode::whiteRook | colorMask, true},
-                    {PieceCode::whiteQueen | colorMask, true},
-                    {PieceCode::whiteKing | colorMask, false}
+                    {PieceCode::whiteRook, true},
+                    {PieceCode::whiteQueen, true},
+                    {PieceCode::whiteKing, false}
                 }
             },
             {
                 {0, 1},
                 {
-                    {PieceCode::whiteRook | colorMask, true},
-                    {PieceCode::whiteQueen | colorMask, true},
-                    {PieceCode::whiteKing | colorMask, false}
+                    {PieceCode::whiteRook, true},
+                    {PieceCode::whiteQueen, true},
+                    {PieceCode::whiteKing, false}
                 }
             },
             {
                 {1, -1},
                 {
-                    {PieceCode::whiteBishop | colorMask, true},
-                    {PieceCode::whiteQueen | colorMask, true},
-                    {PieceCode::whiteKing | colorMask, false}
+                    {PieceCode::whiteBishop, true},
+                    {PieceCode::whiteQueen, true},
+                    {PieceCode::whiteKing, false},
+                    {PieceCode::whitePawn, false}
                 }
             },
             {
                 {1, 0},
                 {
-                    {PieceCode::whiteRook | colorMask, true},
-                    {PieceCode::whiteQueen | colorMask, true},
-                    {PieceCode::whiteKing | colorMask, false}
+                    {PieceCode::whiteRook, true},
+                    {PieceCode::whiteQueen, true},
+                    {PieceCode::whiteKing, false}
                 }
             },
             {
                 {1, 1},
                 {
-                    {PieceCode::whiteBishop | colorMask, true},
-                    {PieceCode::whiteQueen | colorMask, true},
-                    {PieceCode::whiteKing | colorMask, false}
+                    {PieceCode::whiteBishop, true},
+                    {PieceCode::whiteQueen, true},
+                    {PieceCode::whiteKing, false}
                 }
             },
             {
                 {-2, -1},
                 {
-                    {PieceCode::whiteKnight | colorMask, false}
+                    {PieceCode::whiteKnight, false}
                 }
             },
             {
                 {-2, 1},
                 {
-                    {PieceCode::whiteKnight | colorMask, false}
+                    {PieceCode::whiteKnight, false}
                 }
             },
             {
                 {2, -1},
                 {
-                    {PieceCode::whiteKnight | colorMask, false}
+                    {PieceCode::whiteKnight, false}
                 }
             },
             {
                 {2, 1},
                 {
-                    {PieceCode::whiteKnight | colorMask, false}
+                    {PieceCode::whiteKnight, false}
                 }
             },
             {
                 {-1, -2},
                 {
-                    {PieceCode::whiteKnight | colorMask, false}
+                    {PieceCode::whiteKnight, false}
                 }
             },
             {
                 {-1, 2},
                 {
-                    {PieceCode::whiteKnight | colorMask, false}
+                    {PieceCode::whiteKnight, false}
                 }
             },
             {
                 {1, -2},
                 {
-                    {PieceCode::whiteKnight | colorMask, false}
+                    {PieceCode::whiteKnight, false}
                 }
             },
             {
                 {1, 2},
                 {
-                    {PieceCode::whiteKnight | colorMask, false}
+                    {PieceCode::whiteKnight, false}
                 }
             }
         };
-
-        for (auto directionData : directionsOfAttack) {
-            ChessSquare direction = directionData.first;
-
-            if (std::abs(direction.file) == 1 && std::abs(direction.rank) == 1) {
-                // if the direction is diagonal, it may be a pawn attack
-                if (pawnForwardDirection == -direction.rank) {
-                    directionData.second.push_back({ PieceCode::whitePawn | colorMask, false });
+        const std::vector< std::pair<ChessSquare, std::vector< std::pair <PieceCode, bool> > > > directionsOfAttack_black = {
+            {
+                {-1, -1},
+                {
+                    {PieceCode::blackBishop, true},
+                    {PieceCode::blackQueen, true},
+                    {PieceCode::blackKing, false}
+                }
+            },
+            {
+                {-1, 0},
+                {
+                    {PieceCode::blackRook, true},
+                    {PieceCode::blackQueen, true},
+                    {PieceCode::blackKing, false}
+                }
+            },
+            {
+                {-1, 1},
+                {
+                    {PieceCode::blackBishop, true},
+                    {PieceCode::blackQueen, true},
+                    {PieceCode::blackKing, false},
+                    {PieceCode::blackPawn, false}
+                }
+            },
+            {
+                {0, -1},
+                {
+                    {PieceCode::blackRook, true},
+                    {PieceCode::blackQueen, true},
+                    {PieceCode::blackKing, false}
+                }
+            },
+            {
+                {0, 1},
+                {
+                    {PieceCode::blackRook, true},
+                    {PieceCode::blackQueen, true},
+                    {PieceCode::blackKing, false}
+                }
+            },
+            {
+                {1, -1},
+                {
+                    {PieceCode::blackBishop, true},
+                    {PieceCode::blackQueen, true},
+                    {PieceCode::blackKing, false}
+                }
+            },
+            {
+                {1, 0},
+                {
+                    {PieceCode::blackRook, true},
+                    {PieceCode::blackQueen, true},
+                    {PieceCode::blackKing, false}
+                }
+            },
+            {
+                {1, 1},
+                {
+                    {PieceCode::blackBishop, true},
+                    {PieceCode::blackQueen, true},
+                    {PieceCode::blackKing, false},
+                    {PieceCode::blackPawn, false}
+                }
+            },
+            {
+                {-2, -1},
+                {
+                    {PieceCode::blackKnight, false}
+                }
+            },
+            {
+                {-2, 1},
+                {
+                    {PieceCode::blackKnight, false}
+                }
+            },
+            {
+                {2, -1},
+                {
+                    {PieceCode::blackKnight, false}
+                }
+            },
+            {
+                {2, 1},
+                {
+                    {PieceCode::blackKnight, false}
+                }
+            },
+            {
+                {-1, -2},
+                {
+                    {PieceCode::blackKnight, false}
+                }
+            },
+            {
+                {-1, 2},
+                {
+                    {PieceCode::blackKnight, false}
+                }
+            },
+            {
+                {1, -2},
+                {
+                    {PieceCode::blackKnight, false}
+                }
+            },
+            {
+                {1, 2},
+                {
+                    {PieceCode::blackKnight, false}
                 }
             }
+        };
+    }
+
+
+    bool ChessPosition::isSquareAttacked_directionalSearch(ChessSquare square) const {
+        // Attacks can come from a diagonal, a straight line, or a knight attack.
+        // Note that kings and pawns still attack along a diagonal or straight line.
+
+        Color opposingColor = (turn_ == Color::White) ? Color::Black : Color::White;
+
+        const std::vector< std::pair<ChessSquare, std::vector< std::pair <PieceCode, bool> > > > & directionsOfAttack =
+            ((opposingColor == Color::White)) ? attackDirectionLookUpTables::directionsOfAttack_white
+            : attackDirectionLookUpTables::directionsOfAttack_black;
+
+        for (const auto & directionData : directionsOfAttack) {
+            ChessSquare direction = directionData.first;
 
             ChessSquare square_to_check = square + direction;
             bool firstStep = true;
@@ -217,6 +330,10 @@ namespace cyberpawn {
 
         // all attack vectors have been checked, so we can safely say the square is not under attack.
         return false;
+    }
+
+    bool ChessPosition::isSquareAttacked(ChessSquare square) const {
+        return isSquareAttacked_directionalSearch(square);
     }
 
     bool ChessPosition::isKingAttacked() const {

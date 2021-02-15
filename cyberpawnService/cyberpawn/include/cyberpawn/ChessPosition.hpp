@@ -88,6 +88,8 @@ namespace cyberpawn {
 
         void setUpStandardChessGame();
 
+        // isSquareAttacked implementations
+        bool isSquareAttacked_directionalSearch(ChessSquare square) const;
     };
 
 
