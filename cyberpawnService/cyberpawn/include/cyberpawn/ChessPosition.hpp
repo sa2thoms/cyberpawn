@@ -11,8 +11,8 @@ namespace cyberpawn {
 
     class ChessPosition {
     private:
-        // a vector of files, each of which is a vector of pieceCodes
-        std::vector< std::vector<PieceCode> > board_;
+        // row-major ordered
+        PieceCode board_[8][8];
         std::optional<int8_t> fileInWhichAPawnMovedTwoSquaresThePreviousMove_;
         bool whiteMayStillCastleKingside_ = true;
         bool blackMayStillCastleKingside_ = true;
@@ -24,10 +24,18 @@ namespace cyberpawn {
         ~ChessPosition() = default;
 
         ChessPosition() {
-            // size of the the board is set at the start of the constructor and must never ever change.
-            // other member functions will assume 8 by 8 board
-            this->setBoardTo8by8();
             this->setUpStandardChessGame();
+        }
+
+        // copy constructor
+        ChessPosition(const ChessPosition & other) {
+            memcpy(board_, other.board_, sizeof(PieceCode) * 64);
+            fileInWhichAPawnMovedTwoSquaresThePreviousMove_ = other.fileInWhichAPawnMovedTwoSquaresThePreviousMove_;
+            whiteMayStillCastleKingside_ = other.whiteMayStillCastleKingside_;
+            whiteMayStillCastleQueenside_ = other.whiteMayStillCastleQueenside_;
+            blackMayStillCastleKingside_ = other.blackMayStillCastleKingside_;
+            blackMayStillCastleQueenside_ = other.blackMayStillCastleQueenside_;
+            turn_ = other.turn_;
         }
 
         Color getTurn() const { return turn_; }
@@ -35,12 +43,13 @@ namespace cyberpawn {
         std::optional<int8_t> fileInWhichAPawnMovedTwoSquaresThePreviousMove() const { return fileInWhichAPawnMovedTwoSquaresThePreviousMove_; }
         void setFileWherePawnJustMovedTwoSpacesForward(std::optional<int8_t> file) { fileInWhichAPawnMovedTwoSquaresThePreviousMove_ = file; }
 
-        const std::vector<std::vector<PieceCode>> & getBoard() const { return board_; }
+        // returns a row-major order array of 64 squares [A1, A2, ... H7, H8];
+        PieceCode const * getBoard() const { return board_[0]; }
 
-        const std::vector<PieceCode> & operator[](int8_t file) const { return board_[file]; }
+        PieceCode const * operator[](int8_t file) const { return board_[file]; }
 
-        const PieceCode & operator[](const ChessSquare square) const { return board_[square.file][square.rank]; }
-        PieceCode & operator[](const ChessSquare square) { return board_[square.file][square.rank]; }
+        PieceCode const & operator[](const ChessSquare & square) const { return board_[square.file][square.rank]; }
+        PieceCode & operator[](const ChessSquare & square) { return board_[square.file][square.rank]; }
 
         // returns true if ther player whose turn it is has not moved his king or kingside rook yet
         bool mayCastleKingside() const { return (turn_ == Color::White) ? whiteMayStillCastleKingside_ : blackMayStillCastleKingside_; }
@@ -72,12 +81,6 @@ namespace cyberpawn {
         bool isInCheckmate() const;
         bool isInStalemate() const;
     private:
-        void setBoardTo8by8() {
-            board_ = std::vector< std::vector<PieceCode> >(8);
-            for (std::vector<PieceCode> & file : board_) {
-                file = std::vector<PieceCode>(8);
-            }
-        }
         void setBoardToEmpty() {
             for (auto & file : board_) {
                 for (auto & pieceCode : file) {

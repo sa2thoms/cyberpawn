@@ -339,7 +339,7 @@ namespace cyberpawn {
     bool ChessPosition::isKingAttacked() const {
         PieceCode kingInQuestion = (turn_ == Color::White) ? PieceCode::whiteKing : PieceCode::blackKing;
         std::optional<ChessSquare> positionOfKing;
-        for (int8_t f = 0; f < board_.size(); f++) {
+        for (int8_t f = 0; f < 8; f++) {
             for (int8_t r = 0; r < 8; r++) {
                 if (board_[f][r] == kingInQuestion) {
                     positionOfKing = ChessSquare{ f, r };
