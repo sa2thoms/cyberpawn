@@ -7,10 +7,10 @@
 
 namespace cyberpawn {
 
-	class Engine {
-	public:
-		virtual std::vector<ChessMove> findBestMoves(const ChessPosition & position, int maxMoves) const = 0;
-	};
+    class Engine {
+    public:
+        virtual std::vector<ChessMove> findBestMoves(const ChessPosition & position, int maxMoves) const = 0;
+    };
 
 }
 

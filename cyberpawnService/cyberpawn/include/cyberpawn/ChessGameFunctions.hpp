@@ -18,6 +18,9 @@ namespace cyberpawn {
 
     // Returns a vector of moves that may or may not be legal
     std::vector<ChessMove> collectPotentialMoves(const ChessPosition & position);
+
+    // Returns the exact set of legal moves
+    std::vector<ChessMove> allLegalMoves(const ChessPosition & position);
 }
 
 

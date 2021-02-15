@@ -3,10 +3,10 @@
 
 namespace cyberpawn {
 
-	enum class Color {
-		White = 0,
-		Black = 1
-	};
+    enum class Color {
+        White = 0,
+        Black = 1
+    };
 
 
 }
