@@ -3,10 +3,6 @@
 
 namespace cyberpawn {
 
-    namespace math {
-        template <typename T>
-        T square(T a) { return a * a; }
-    }
 
 
     bool withinBoard(ChessSquare square) {

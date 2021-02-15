@@ -9,6 +9,12 @@
 
 namespace cyberpawn {
 
+
+    namespace math {
+        template <typename T>
+        T square(T a) { return a * a; }
+    }
+
     bool withinBoard(ChessSquare square);
 
     // if the move is legal, a new position with the move made is returned. If the
