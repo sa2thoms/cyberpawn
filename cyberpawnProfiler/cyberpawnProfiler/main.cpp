@@ -100,8 +100,8 @@ std::string gameStateToString(ChessGame::State state) {
 }
 
 int main() {
-    BetaTreeEngine whiteEngine(4);
-    BetaTreeEngine blackEngine(4);
+    BetaTreeEngine whiteEngine(5);
+    BetaTreeEngine blackEngine(5);
 
     whiteEngine.setAllowMultipleThreads(true);
     blackEngine.setAllowMultipleThreads(true);

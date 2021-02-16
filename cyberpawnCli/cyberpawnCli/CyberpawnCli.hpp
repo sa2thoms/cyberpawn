@@ -17,10 +17,16 @@ namespace cyberpawn {
 		std::optional<ChessPosition> interactive_game_;
 		bool confirming_exit = false;
 	public:
+		CyberpawnCli() {
+			beta_engine_.setSearchDepth(6);
+			beta_engine_.setAllowMultipleThreads(true);
+		}
+
 		// Executes the command, returning true if the cli should stay open for another command
 		bool execute(const std::string & command);
 
 	private:
+
 		bool executeStartCommand(const std::vector<std::string> & tokens);
 	};
 
