@@ -146,3 +146,27 @@ TEST(ChessGameFunctionsTest, canTakeAnotherPieceWithAPawnWhenEnPassantIsAvailabl
     EXPECT_EQ(position[(ChessSquare{ 3, 3 })], PieceCode::whitePawn);
     EXPECT_EQ(position[(ChessSquare{ 3, 4 })], PieceCode::blackPawn);
 }
+
+TEST(ChessGameFunctionsTest, canPromotePawnToAQueen) {
+    ChessPosition position;
+    std::vector<ChessMove> legalMoves = {
+        { {6, 1}, {6, 3} },
+        { {0, 6}, {0, 5} },
+        { {6, 3}, {6, 4} },
+        { {0, 5}, {0, 4} },
+        { {6, 4}, {6, 5} },
+        { {0, 4}, {0, 3} },
+        { {6, 5}, {7, 6} },
+        { {0, 3}, {0, 2} },
+        { {7, 6}, {6, 7} }
+    };
+
+    for (const auto & move : legalMoves) {
+        auto newPosition = makeMoveIfLegal(position, move);
+        EXPECT_TRUE(newPosition.has_value());
+        position = newPosition.value();
+    }
+
+    EXPECT_EQ(position[(ChessSquare{ 6, 7 })], PieceCode::whiteQueen);
+}
+

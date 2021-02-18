@@ -31,10 +31,12 @@ namespace cyberpawn {
             && (pieceColor != position[to].getColor() || position[to] == PieceCode::noPiece);
         if (!isValidSoFar) { return false; }
 
+        int8_t colorMask = (pieceColor == Color::White) ? 0b00000000 : 0b00010000;
 
         if (pieceToMove.isPawn()) {
             int8_t forwardDirection = pieceColor == Color::White ? 1 : -1;
             int8_t pawnStartRank = pieceColor == Color::White ? 1 : 6;
+            int8_t pawnPromotionRank = (pieceColor == Color::White) ? 7 : 0;
             if ((to.rank - from.rank) == (forwardDirection * 2)) {
                 if (from.rank != pawnStartRank) {
                     return false;
@@ -59,6 +61,7 @@ namespace cyberpawn {
                         return false;
                     }
                     position[to] = pieceToMove;
+                    if (to.rank == pawnPromotionRank) position[to] = PieceCode::whiteQueen | colorMask;
                     position[from] = PieceCode::noPiece;
                     position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
                     return true;
@@ -88,6 +91,7 @@ namespace cyberpawn {
                         return false;
                     }
                     position[to] = pieceToMove;
+                    if (to.rank == pawnPromotionRank) position[to] = PieceCode::whiteQueen | colorMask;
                     position[from] = PieceCode::noPiece;
                     position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
                     return true;

@@ -75,7 +75,7 @@ namespace cyberpawn {
         void swapTurn() { turn_ = ((turn_ == Color::White) ? Color::Black : Color::White); }
 
         // returns true if the square is attacked by the opposing player (the player whose turn it is not)
-        bool isSquareAttacked(ChessSquare square) const;
+        bool isSquareAttacked(const ChessSquare & square) const;
         bool isKingAttacked() const;
 
         bool isInCheckmate() const;
@@ -92,7 +92,7 @@ namespace cyberpawn {
         void setUpStandardChessGame();
 
         // isSquareAttacked implementations
-        bool isSquareAttacked_directionalSearch(ChessSquare square) const;
+        bool isSquareAttacked_directionalSearch(const ChessSquare & square) const;
     };
 
 

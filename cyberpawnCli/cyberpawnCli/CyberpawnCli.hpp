@@ -28,6 +28,8 @@ namespace cyberpawn {
 	private:
 
 		bool executeStartCommand(const std::vector<std::string> & tokens);
+		bool executeSetDepthCommand(const std::string & depth);
+		bool executeSetCommand(const std::vector<std::string> & tokens);
 	};
 
 

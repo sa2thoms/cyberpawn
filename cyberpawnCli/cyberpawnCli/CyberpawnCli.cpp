@@ -18,6 +18,29 @@ namespace cyberpawn {
 		return true;
 	}
 
+	bool CyberpawnCli::executeSetDepthCommand(const std::string & depth) {
+		int depth_as_int = std::stoi(depth);
+		beta_engine_.setSearchDepth(depth_as_int);
+		std::cout << "Engine will now search " << depth_as_int << " moves in the future" << std::endl;
+		return true;
+	}
+
+	bool CyberpawnCli::executeSetCommand(const std::vector<std::string> & tokens) {
+		if (tokens.size() == 3) {
+			if (tokens[1] == "depth") {
+				return executeSetDepthCommand(tokens[2]);
+			}
+			else {
+				std::cout << "Unknown property: " << tokens[1] << std::endl;
+				return true;
+			}
+		}
+		else {
+			std::cout << "Usage: Set <property_name> <property_value>" << std::endl;
+			return true;
+		}
+	}
+
 	bool isAffirmative(const std::string & s) {
 		const std::vector<std::string> affirmatives = {
 			"yes",
@@ -62,6 +85,10 @@ namespace cyberpawn {
 
 		if (tokens[0] == "start") {
 			return executeStartCommand(tokens);
+		}
+
+		if (tokens[0] == "set") {
+			return executeSetCommand(tokens);
 		}
 
 		if (interactive_game_) {

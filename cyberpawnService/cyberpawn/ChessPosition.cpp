@@ -291,7 +291,7 @@ namespace cyberpawn {
     }
 
 
-    bool ChessPosition::isSquareAttacked_directionalSearch(ChessSquare square) const {
+    bool ChessPosition::isSquareAttacked_directionalSearch(const ChessSquare & square) const {
         // Attacks can come from a diagonal, a straight line, or a knight attack.
         // Note that kings and pawns still attack along a diagonal or straight line.
 
@@ -302,7 +302,7 @@ namespace cyberpawn {
             : attackDirectionLookUpTables::directionsOfAttack_black;
 
         for (const auto & directionData : directionsOfAttack) {
-            ChessSquare direction = directionData.first;
+            const ChessSquare & direction = directionData.first;
 
             ChessSquare square_to_check = square + direction;
             bool firstStep = true;
@@ -312,19 +312,14 @@ namespace cyberpawn {
                     square_to_check = square_to_check + direction;
                     continue;
                 }
-                else if (this->operator[](square_to_check).getColor() == opposingColor) {
-
-                    for (auto capablePiece : directionData.second) {
-                        if ((firstStep || capablePiece.second) && capablePiece.first == this->operator[](square_to_check)) {
+                if (this->operator[](square_to_check).getColor() == opposingColor) {
+                    for (const auto & capablePiece : directionData.second) {
+                        if ((capablePiece.first == this->operator[](square_to_check)) && (firstStep || capablePiece.second)) {
                             return true;
                         }
                     }
-
-                    break;
                 }
-                else {
-                    break;
-                }
+                break;
             }
         }
 
@@ -332,26 +327,20 @@ namespace cyberpawn {
         return false;
     }
 
-    bool ChessPosition::isSquareAttacked(ChessSquare square) const {
+    bool ChessPosition::isSquareAttacked(const ChessSquare & square) const {
         return isSquareAttacked_directionalSearch(square);
     }
 
     bool ChessPosition::isKingAttacked() const {
         PieceCode kingInQuestion = (turn_ == Color::White) ? PieceCode::whiteKing : PieceCode::blackKing;
-        std::optional<ChessSquare> positionOfKing;
         for (int8_t f = 0; f < 8; f++) {
             for (int8_t r = 0; r < 8; r++) {
                 if (board_[f][r] == kingInQuestion) {
-                    positionOfKing = ChessSquare{ f, r };
+                    return isSquareAttacked({ f, r });
                 }
             }
         }
-        if (positionOfKing) {
-            return isSquareAttacked(positionOfKing.value());
-        }
-        else {
-            return false;
-        }
+        return false;
     }
 
     bool ChessPosition::isInCheckmate() const {
