@@ -10,6 +10,29 @@
 namespace cyberpawn {
 
     float standalonePieceScore(const PieceCode & pieceCode) {
+        //switch (pieceCode.asChar()) {
+        //case PieceCode::whitePawn:
+        //    return 0.87;
+        //case PieceCode::whiteBishop:
+        //    return 3.04;
+        //case PieceCode::whiteKnight:
+        //    return 3.0f;
+        //case PieceCode::whiteRook:
+        //    return 4.7;
+        //case PieceCode::whiteQueen:
+        //    return 9.2f;
+        //case PieceCode::whiteKing:
+        //    return 16.f * 10.0f;
+        //default:
+        //    if (pieceCode.getColor() == Color::Black) {
+        //        // black score is the negative of the white score
+        //        return -standalonePieceScore(pieceCode & int8_t(0b11101111));
+        //    }
+        //    else {
+        //        return 0.f;
+        //    }
+        //}
+
         if (pieceCode == PieceCode::whitePawn) {
             return 0.87f;
         }
@@ -48,8 +71,6 @@ namespace cyberpawn {
         bool black_odd_bishop_exists = false;
         bool black_even_bishop_exists = false;
 
-
-        const auto & board = position.getBoard();
         for (int8_t f = 0; f < 8; f++) {
             for (int8_t r = 0; r < 8; r++) {
                 PieceCode pieceCode = position[f][r];
@@ -101,7 +122,7 @@ namespace cyberpawn {
         return score_total;
     }
 
-    std::pair<ChessMove, float> findBestMove(const ChessPosition & position, int depth, float parentBestScoreReached) {
+    std::pair<ChessMove, float> findBestMove(const ChessPosition & position, int depth, float parentBestScoreReached, int depthOfContinuedThreadSplitting = 0) {
         std::vector<ChessMove> possibleMoves = collectPotentialMoves(position);
         std::function<bool(float, float)> isScoreBetterThan = (position.getTurn() == Color::White)
             ? std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { return scoreA > scoreB; })
@@ -113,19 +134,46 @@ namespace cyberpawn {
 
         std::function<float(const ChessPosition &)> calculateScore =
             (depth <= 1) ? std::function<float(const ChessPosition &)>([](const ChessPosition & position) -> float {return calculateStaticPositionScore(position); })
-            : std::function<float(const ChessPosition &)>([&depth, &bestFoundSoFar](const ChessPosition & position) -> float {return findBestMove(position, depth - 1, bestFoundSoFar.second).second; });
+            : std::function<float(const ChessPosition &)>([&](const ChessPosition & position) -> float {return findBestMove(position, depth - 1, bestFoundSoFar.second, depthOfContinuedThreadSplitting - 1).second; });
 
-        
-        for (const ChessMove & move : possibleMoves) {
-            auto newPosition = makeMoveIfLegal(position, move);
-            if (newPosition) {
-                float score = calculateScore(newPosition.value());
-                if (isScoreBetterThan(score, bestFoundSoFar.second)) {
-                    bestFoundSoFar = { move, score };
+        if (depthOfContinuedThreadSplitting > 0) {
+            std::vector<std::pair<ChessMove, float> > scoredMoves;
+            std::vector<std::thread> threads;
+            int index = 0;
+            for (const ChessMove & move : possibleMoves) {
+                auto newPosition = makeMoveIfLegal(position, move);
+                if (newPosition) {
+                    scoredMoves.push_back({ { {0, 0}, {0, 0} }, 0.f });
+                    threads.push_back(std::thread([&](int i, ChessPosition p) { scoredMoves[i] = { move, calculateScore(p) }; }, index, std::move(newPosition.value())));
+                    index++;
+                }
+            }
+            for (auto & thread : threads) {
+                thread.join();
+            }
+            for (auto & scoredMove : scoredMoves) {
+                if (isScoreBetterThan(scoredMove.second, bestFoundSoFar.second)) {
+                    bestFoundSoFar = scoredMove;
 
                     // alpha-beta pruning
                     if (isScoreBetterThan(bestFoundSoFar.second, parentBestScoreReached)) {
                         break;
+                    }
+                }
+            }
+        }
+        else {
+            for (const ChessMove & move : possibleMoves) {
+                auto newPosition = makeMoveIfLegal(position, move);
+                if (newPosition) {
+                    float score = calculateScore(newPosition.value());
+                    if (isScoreBetterThan(score, bestFoundSoFar.second)) {
+                        bestFoundSoFar = { move, score };
+
+                        // alpha-beta pruning
+                        if (isScoreBetterThan(bestFoundSoFar.second, parentBestScoreReached)) {
+                            break;
+                        }
                     }
                 }
             }
@@ -150,7 +198,7 @@ namespace cyberpawn {
             std::function<void(ChessMove, int)> evaluateMoveAndPlaceInTestedMoves = [&](ChessMove move, int index) {
                 auto newPosition = makeMoveIfLegal(position, move);
                 if (newPosition) {
-                    float score = findBestMove(newPosition.value(), searchDepth_ - 1, (position.getTurn() == Color::White) ? -INFINITY : INFINITY).second;
+                    float score = findBestMove(newPosition.value(), searchDepth_ - 1, (position.getTurn() == Color::White) ? -INFINITY : INFINITY, 1).second;
                     testedMoves[index] = { move, score };
                 }
             };
@@ -173,7 +221,7 @@ namespace cyberpawn {
             for (auto move : possibleMoves) {
                 auto newPosition = makeMoveIfLegal(position, move);
                 if (newPosition) {
-                    float score = findBestMove(newPosition.value(), searchDepth_ - 1, (position.getTurn() == Color::White) ? -INFINITY : INFINITY).second;
+                    float score = findBestMove(newPosition.value(), searchDepth_ - 1, (position.getTurn() == Color::White) ? -INFINITY : INFINITY, 1).second;
                     validMoves.push_back({ move, score });
                 }
             }

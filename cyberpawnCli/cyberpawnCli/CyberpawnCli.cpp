@@ -13,6 +13,10 @@ namespace cyberpawn {
 			interactive_game_ = ChessPosition();
 			return true;
 		}
+		if (tokens.size() == 2 && tokens[1] == "game") {
+			interactive_game_ = ChessPosition();
+			return true;
+		}
 
 		std::cout << "Unkown start command. What are you trying to start?" << std::endl;
 		return true;

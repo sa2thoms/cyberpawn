@@ -18,7 +18,8 @@ namespace cyberpawn {
 		bool confirming_exit = false;
 	public:
 		CyberpawnCli() {
-			beta_engine_.setSearchDepth(6);
+			constexpr size_t default_search_depth = 6;
+			beta_engine_.setSearchDepth(default_search_depth);
 			beta_engine_.setAllowMultipleThreads(true);
 		}
 

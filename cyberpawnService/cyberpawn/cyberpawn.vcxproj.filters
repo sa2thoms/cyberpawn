@@ -45,6 +45,9 @@
     <ClInclude Include="include\cyberpawn\Exception.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\cyberpawn\HashTreeEngine.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ChessPosition.cpp">
@@ -54,6 +57,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ChessGameFunctions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HashTreeEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
