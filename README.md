@@ -1,6 +1,31 @@
 # cyberpawn
 A chess engine personal project
 
+## Building with CMake
+
+CMake is the cross-platform build system. It works on macOS (Apple Clang or LLVM Clang) and Windows (MSVC).
+
+```bash
+cmake -S . -B build
+cmake --build build
+ctest --test-dir build
+```
+
+Build options:
+
+- `CYBERPAWN_BUILD_CLI` (default ON) — build the interactive CLI
+- `CYBERPAWN_BUILD_PROFILER` (default ON) — build the profiler utility
+- `CYBERPAWN_BUILD_TESTS` (default ON) — build and register unit tests
+
+Example: build only the core library and CLI:
+
+```bash
+cmake -S . -B build -DCYBERPAWN_BUILD_TESTS=OFF -DCYBERPAWN_BUILD_PROFILER=OFF
+cmake --build build
+```
+
+Visual Studio solution files are still present for Windows development.
+
 ## Architecture thoughts
 There is a VS project called cyberpawn. This is the core engine itself. It is just a statically linkable library.
 
