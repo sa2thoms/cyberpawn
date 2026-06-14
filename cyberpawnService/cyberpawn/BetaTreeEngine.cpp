@@ -2,12 +2,51 @@
 
 #include "cyberpawn/ChessGameFunctions.hpp"
 
-#include <functional>
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include <thread>
+#include <vector>
 
 namespace cyberpawn {
+
+    float calculateStaticPositionScore(const ChessPosition& position);
+
+    namespace {
+
+        constexpr float kInfinity = std::numeric_limits<float>::infinity();
+
+        float evaluateSideToMove(const ChessPosition& position) {
+            const float score = calculateStaticPositionScore(position);
+            return position.getTurn() == Color::White ? score : -score;
+        }
+
+        float alphaBeta(ChessPosition& position, int depth, float alpha, float beta) {
+            if (depth <= 0) {
+                return evaluateSideToMove(position);
+            }
+
+            float bestScore = -kInfinity;
+
+            for (const ChessMove& move : collectPotentialMoves(position)) {
+                MoveUndo undo;
+                if (!tryMakeMove(position, move, undo)) {
+                    continue;
+                }
+
+                const float score = -alphaBeta(position, depth - 1, -beta, -alpha);
+                unmakeMove(position, undo);
+                bestScore = std::max(bestScore, score);
+                alpha = std::max(alpha, score);
+                if (alpha >= beta) {
+                    return beta;
+                }
+            }
+
+            return bestScore;
+        }
+
+    } // namespace
 
     float standalonePieceScore(const PieceCode & pieceCode) {
         //switch (pieceCode.asChar()) {
@@ -122,131 +161,77 @@ namespace cyberpawn {
         return score_total;
     }
 
-    std::pair<ChessMove, float> findBestMove(const ChessPosition & position, int depth, float parentBestScoreReached, int depthOfContinuedThreadSplitting = 0) {
-        std::vector<ChessMove> possibleMoves = collectPotentialMoves(position);
-        std::function<bool(float, float)> isScoreBetterThan = (position.getTurn() == Color::White)
-            ? std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { return scoreA > scoreB; })
-            : std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { return scoreA < scoreB; });
-
-        std::pair<ChessMove, float> bestFoundSoFar = {
-            {{0, 0}, {0, 0}}, (position.getTurn() == Color::White) ? -INFINITY : INFINITY
-        };
-
-        std::function<float(const ChessPosition &)> calculateScore =
-            (depth <= 1) ? std::function<float(const ChessPosition &)>([](const ChessPosition & position) -> float {return calculateStaticPositionScore(position); })
-            : std::function<float(const ChessPosition &)>([&](const ChessPosition & position) -> float {return findBestMove(position, depth - 1, bestFoundSoFar.second, depthOfContinuedThreadSplitting - 1).second; });
-
-        if (depthOfContinuedThreadSplitting > 0) {
-            std::vector<std::pair<ChessMove, float> > scoredMoves;
-            std::vector<std::thread> threads;
-            int index = 0;
-            for (const ChessMove & move : possibleMoves) {
-                auto newPosition = makeMoveIfLegal(position, move);
-                if (newPosition) {
-                    scoredMoves.push_back({ { {0, 0}, {0, 0} }, 0.f });
-                    threads.push_back(std::thread([&](int i, ChessPosition p) { scoredMoves[i] = { move, calculateScore(p) }; }, index, std::move(newPosition.value())));
-                    index++;
-                }
-            }
-            for (auto & thread : threads) {
-                thread.join();
-            }
-            for (auto & scoredMove : scoredMoves) {
-                if (isScoreBetterThan(scoredMove.second, bestFoundSoFar.second)) {
-                    bestFoundSoFar = scoredMove;
-
-                    // alpha-beta pruning
-                    if (isScoreBetterThan(bestFoundSoFar.second, parentBestScoreReached)) {
-                        break;
-                    }
-                }
-            }
-        }
-        else {
-            for (const ChessMove & move : possibleMoves) {
-                auto newPosition = makeMoveIfLegal(position, move);
-                if (newPosition) {
-                    float score = calculateScore(newPosition.value());
-                    if (isScoreBetterThan(score, bestFoundSoFar.second)) {
-                        bestFoundSoFar = { move, score };
-
-                        // alpha-beta pruning
-                        if (isScoreBetterThan(bestFoundSoFar.second, parentBestScoreReached)) {
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        return bestFoundSoFar;
-    }
-
     std::vector<ChessMove> BetaTreeEngine::findBestMoves(const ChessPosition & position, int maxMoves) const {
-        std::vector<ChessMove> possibleMoves = collectPotentialMoves(position);
-        std::function<bool(float, float)> isScoreBetterThan = (position.getTurn() == Color::White)
-            ? std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { return scoreA > scoreB; })
-            : std::function<bool(float, float)>([](float scoreA, float scoreB) -> bool { return scoreA < scoreB; });
-
-
+        const std::vector<ChessMove> possibleMoves = collectPotentialMoves(position);
         std::vector<std::pair<ChessMove, float>> validMoves;
-        
-        if (this->useMultipleThreads_) {
-            std::vector<std::optional<std::pair<ChessMove, float> > > testedMoves;
-            testedMoves.resize(possibleMoves.size());
 
-            std::function<void(ChessMove, int)> evaluateMoveAndPlaceInTestedMoves = [&](ChessMove move, int index) {
-                auto newPosition = makeMoveIfLegal(position, move);
-                if (newPosition) {
-                    float score = findBestMove(newPosition.value(), searchDepth_ - 1, (position.getTurn() == Color::White) ? -INFINITY : INFINITY, 1).second;
-                    testedMoves[index] = { move, score };
-                }
-            };
+        if (this->useMultipleThreads_) {
+            std::vector<std::optional<std::pair<ChessMove, float>>> testedMoves(possibleMoves.size());
 
             std::vector<std::thread> threads;
-            for (int i = 0; i < possibleMoves.size(); i++) {
-                threads.push_back(std::thread(evaluateMoveAndPlaceInTestedMoves, possibleMoves[i], i));
+            for (int i = 0; i < static_cast<int>(possibleMoves.size()); i++) {
+                threads.emplace_back([&, i]() {
+                    ChessPosition searchPosition = position;
+                    MoveUndo undo;
+                    if (tryMakeMove(searchPosition, possibleMoves[i], undo)) {
+                        const float score = -alphaBeta(
+                            searchPosition,
+                            searchDepth_ - 1,
+                            -kInfinity,
+                            kInfinity
+                        );
+                        testedMoves[i] = { possibleMoves[i], score };
+                    }
+                });
             }
-            for (auto & thread : threads) {
+            for (auto& thread : threads) {
                 thread.join();
             }
 
-            for (auto & pair : testedMoves) {
+            for (auto& pair : testedMoves) {
                 if (pair) {
                     validMoves.push_back(pair.value());
                 }
             }
         }
         else {
-            for (auto move : possibleMoves) {
-                auto newPosition = makeMoveIfLegal(position, move);
-                if (newPosition) {
-                    float score = findBestMove(newPosition.value(), searchDepth_ - 1, (position.getTurn() == Color::White) ? -INFINITY : INFINITY, 1).second;
+            ChessPosition searchPosition = position;
+            for (const ChessMove& move : possibleMoves) {
+                MoveUndo undo;
+                if (tryMakeMove(searchPosition, move, undo)) {
+                    const float score = -alphaBeta(
+                        searchPosition,
+                        searchDepth_ - 1,
+                        -kInfinity,
+                        kInfinity
+                    );
+                    unmakeMove(searchPosition, undo);
                     validMoves.push_back({ move, score });
                 }
             }
         }
-        
+
         std::sort(
             validMoves.begin(),
             validMoves.end(),
-            [&isScoreBetterThan](const std::pair<ChessMove, float> & a, const std::pair<ChessMove, float> & b) {
-                return isScoreBetterThan(a.second, b.second);
+            [](const std::pair<ChessMove, float>& a, const std::pair<ChessMove, float>& b) {
+                return a.second > b.second;
             }
         );
 
         std::vector<ChessMove> sortedMoves;
+        sortedMoves.reserve(validMoves.size());
 
         std::transform(
             validMoves.begin(),
             validMoves.end(),
             std::back_inserter(sortedMoves),
-            [](const std::pair<ChessMove, float> & pair) {
+            [](const std::pair<ChessMove, float>& pair) {
                 return pair.first;
             }
         );
 
-        if (sortedMoves.size() > maxMoves) {
+        if (static_cast<int>(sortedMoves.size()) > maxMoves) {
             sortedMoves.resize(maxMoves);
         }
 
@@ -254,4 +239,3 @@ namespace cyberpawn {
     }
 
 }
-

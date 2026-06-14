@@ -19,6 +19,8 @@ namespace cyberpawn {
         bool whiteMayStillCastleQueenside_ = true;
         bool blackMayStillCastleQueenside_ = true;
         Color turn_ = Color::White;
+        ChessSquare whiteKingSquare_{ 4, 0 };
+        ChessSquare blackKingSquare_{ 4, 7 };
 
     public:
         ~ChessPosition() = default;
@@ -36,9 +38,36 @@ namespace cyberpawn {
             blackMayStillCastleKingside_ = other.blackMayStillCastleKingside_;
             blackMayStillCastleQueenside_ = other.blackMayStillCastleQueenside_;
             turn_ = other.turn_;
+            whiteKingSquare_ = other.whiteKingSquare_;
+            blackKingSquare_ = other.blackKingSquare_;
         }
 
         Color getTurn() const { return turn_; }
+        void setTurn(Color turn) { turn_ = turn; }
+
+        ChessSquare kingSquare(Color color) const {
+            return color == Color::White ? whiteKingSquare_ : blackKingSquare_;
+        }
+        void setKingSquare(Color color, ChessSquare square) {
+            if (color == Color::White) {
+                whiteKingSquare_ = square;
+            }
+            else {
+                blackKingSquare_ = square;
+            }
+        }
+
+        void restoreCastlingRights(
+            bool whiteKingside,
+            bool whiteQueenside,
+            bool blackKingside,
+            bool blackQueenside
+        ) {
+            whiteMayStillCastleKingside_ = whiteKingside;
+            whiteMayStillCastleQueenside_ = whiteQueenside;
+            blackMayStillCastleKingside_ = blackKingside;
+            blackMayStillCastleQueenside_ = blackQueenside;
+        }
 
         std::optional<int8_t> fileInWhichAPawnMovedTwoSquaresThePreviousMove() const { return fileInWhichAPawnMovedTwoSquaresThePreviousMove_; }
         void setFileWherePawnJustMovedTwoSpacesForward(std::optional<int8_t> file) { fileInWhichAPawnMovedTwoSquaresThePreviousMove_ = file; }
@@ -97,6 +126,7 @@ namespace cyberpawn {
         }
 
         void setUpStandardChessGame();
+        void initKingSquaresFromBoard();
 
         // isSquareAttacked implementations
         bool isSquareAttacked_directionalSearch(const ChessSquare & square) const;

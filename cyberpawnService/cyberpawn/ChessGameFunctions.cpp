@@ -3,8 +3,19 @@
 
 namespace cyberpawn {
 
+    namespace {
 
+        void updateKingSquareIfMoved(
+            ChessPosition& position,
+            PieceCode pieceToMove,
+            ChessSquare to
+        ) {
+            if (pieceToMove.isKing()) {
+                position.setKingSquare(pieceToMove.getColor(), to);
+            }
+        }
 
+    } // namespace
     bool withinBoard(ChessSquare square) {
         if (square.file > 7 || square.rank > 7 || square.file < 0 || square.rank < 0) {
             return false;
@@ -15,7 +26,7 @@ namespace cyberpawn {
     }
 
     // checks if the piece can move there under normal circumstances (e.g. it's along a bishop's diagonal)
-    bool makeMoveIfGeometricallyLegal(ChessPosition & position, const ChessMove & move) {
+    bool makeMoveIfGeometricallyLegal(ChessPosition & position, const ChessMove & move, MoveUndo & undo) {
         ChessSquare from = move.from;
         ChessSquare to = move.to;
 
@@ -77,9 +88,12 @@ namespace cyberpawn {
                             return false;
                         }
                         else {
+                            undo.wasEnPassant = true;
+                            undo.capturedSquare = { enPassantPossibleFile.value(), int8_t(pawnStartRank + forwardDirection * 3) };
+                            undo.captured = position[undo.capturedSquare];
                             position[to] = pieceToMove;
                             position[from] = PieceCode::noPiece;
-                            position[{enPassantPossibleFile.value(), pawnStartRank + forwardDirection * 3}] = PieceCode::noPiece;
+                            position[undo.capturedSquare] = PieceCode::noPiece;
                             position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
                             return true;
                         }
@@ -298,6 +312,8 @@ namespace cyberpawn {
                     position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
                     position.currentPlayerCannotCastleKingsideAnymore();
                     position.currentPlayerCannotCastleQueensideAnymore();
+                    undo.wasKingsideCastle = true;
+                    updateKingSquareIfMoved(position, pieceToMove, to);
                     return true;
                 }
             }
@@ -316,6 +332,8 @@ namespace cyberpawn {
                     position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
                     position.currentPlayerCannotCastleKingsideAnymore();
                     position.currentPlayerCannotCastleQueensideAnymore();
+                    undo.wasQueensideCastle = true;
+                    updateKingSquareIfMoved(position, pieceToMove, to);
                     return true;
                 }
             }
@@ -332,6 +350,7 @@ namespace cyberpawn {
             position.setFileWherePawnJustMovedTwoSpacesForward(std::nullopt);
             position.currentPlayerCannotCastleKingsideAnymore();
             position.currentPlayerCannotCastleQueensideAnymore();
+            updateKingSquareIfMoved(position, pieceToMove, to);
             return true;
         }
         else {
@@ -580,18 +599,95 @@ namespace cyberpawn {
     }
 
     std::optional<ChessPosition> makeMoveIfLegal(const ChessPosition & position, const ChessMove & move) {
-        if (not isMoveGeometricallyLegal(position, move)) {
-            return std::nullopt;
-        }
         ChessPosition copyOfPosition = position;
-        bool gemoetricallyLegal = makeMoveIfGeometricallyLegal(copyOfPosition, move);
-        bool kingLeftAttacked = copyOfPosition.isKingAttacked();
-        if (gemoetricallyLegal && !kingLeftAttacked) {
-            copyOfPosition.swapTurn();
+        MoveUndo undo;
+        if (tryMakeMove(copyOfPosition, move, undo)) {
             return copyOfPosition;
         }
-        else {
-            return std::nullopt;
+        return std::nullopt;
+    }
+
+    bool tryMakeMove(ChessPosition& position, const ChessMove& move, MoveUndo& undo) {
+        undo.move = move;
+        undo.prevTurn = position.getTurn();
+        undo.prevEnPassantFile = position.fileInWhichAPawnMovedTwoSquaresThePreviousMove();
+        undo.prevWhiteCastleK = position.mayCastleKingside(Color::White);
+        undo.prevWhiteCastleQ = position.mayCastleQueenside(Color::White);
+        undo.prevBlackCastleK = position.mayCastleKingside(Color::Black);
+        undo.prevBlackCastleQ = position.mayCastleQueenside(Color::Black);
+        undo.movingPiece = position[move.from];
+        undo.captured = position[move.to];
+        undo.capturedSquare = move.to;
+        undo.wasEnPassant = false;
+        undo.wasKingsideCastle = false;
+        undo.wasQueensideCastle = false;
+
+        if (!makeMoveIfGeometricallyLegal(position, move, undo)) {
+            return false;
+        }
+
+        if (position.isKingAttacked()) {
+            unmakeMove(position, undo);
+            return false;
+        }
+
+        position.swapTurn();
+        return true;
+    }
+
+    void unmakeMove(ChessPosition& position, const MoveUndo& undo) {
+        position.setTurn(undo.prevTurn);
+        position.setFileWherePawnJustMovedTwoSpacesForward(undo.prevEnPassantFile);
+        position.restoreCastlingRights(
+            undo.prevWhiteCastleK,
+            undo.prevWhiteCastleQ,
+            undo.prevBlackCastleK,
+            undo.prevBlackCastleQ
+        );
+
+        const ChessMove& move = undo.move;
+        const Color moverColor = undo.prevTurn;
+        const int8_t colorMask = (moverColor == Color::White) ? 0b00000000 : 0b00010000;
+
+        if (undo.wasKingsideCastle) {
+            const int8_t castleRank = (moverColor == Color::White) ? 0 : 7;
+            const ChessSquare castleStartSquare = { 4, castleRank };
+            const ChessSquare kingsideCastleEndSquare = { 6, castleRank };
+            const ChessSquare kingsideCastleRookStartSquare = { 7, castleRank };
+            const ChessSquare kingsideCastlePassthroughSquare = { 5, castleRank };
+
+            position[castleStartSquare] = undo.movingPiece;
+            position[kingsideCastleEndSquare] = PieceCode::noPiece;
+            position[kingsideCastleRookStartSquare] = PieceCode::whiteRook | colorMask;
+            position[kingsideCastlePassthroughSquare] = PieceCode::noPiece;
+            position.setKingSquare(moverColor, castleStartSquare);
+            return;
+        }
+
+        if (undo.wasQueensideCastle) {
+            const int8_t castleRank = (moverColor == Color::White) ? 0 : 7;
+            const ChessSquare castleStartSquare = { 4, castleRank };
+            const ChessSquare queensideCastleEndSquare = { 2, castleRank };
+            const ChessSquare queensideCastleRookStartSquare = { 0, castleRank };
+            const ChessSquare queensideCastlePassthroughSquare = { 3, castleRank };
+
+            position[castleStartSquare] = undo.movingPiece;
+            position[queensideCastleEndSquare] = PieceCode::noPiece;
+            position[queensideCastleRookStartSquare] = PieceCode::whiteRook | colorMask;
+            position[queensideCastlePassthroughSquare] = PieceCode::noPiece;
+            position.setKingSquare(moverColor, castleStartSquare);
+            return;
+        }
+
+        position[move.from] = undo.movingPiece;
+        position[move.to] = undo.captured;
+
+        if (undo.wasEnPassant) {
+            position[undo.capturedSquare] = undo.captured;
+        }
+
+        if (undo.movingPiece.isKing()) {
+            position.setKingSquare(moverColor, move.from);
         }
     }
 

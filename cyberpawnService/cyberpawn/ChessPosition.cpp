@@ -52,6 +52,23 @@ namespace cyberpawn {
         blackMayStillCastleQueenside_ = true;
 
         turn_ = Color::White;
+        whiteKingSquare_ = { 4, 0 };
+        blackKingSquare_ = { 4, 7 };
+    }
+
+    void ChessPosition::initKingSquaresFromBoard() {
+        whiteKingSquare_ = { 4, 0 };
+        blackKingSquare_ = { 4, 7 };
+        for (int8_t f = 0; f < 8; f++) {
+            for (int8_t r = 0; r < 8; r++) {
+                if (board_[f][r] == PieceCode::whiteKing) {
+                    whiteKingSquare_ = { f, r };
+                }
+                else if (board_[f][r] == PieceCode::blackKing) {
+                    blackKingSquare_ = { f, r };
+                }
+            }
+        }
     }
 
     namespace attackDirectionLookUpTables {
@@ -332,15 +349,8 @@ namespace cyberpawn {
     }
 
     bool ChessPosition::isKingAttacked() const {
-        PieceCode kingInQuestion = (turn_ == Color::White) ? PieceCode::whiteKing : PieceCode::blackKing;
-        for (int8_t f = 0; f < 8; f++) {
-            for (int8_t r = 0; r < 8; r++) {
-                if (board_[f][r] == kingInQuestion) {
-                    return isSquareAttacked({ f, r });
-                }
-            }
-        }
-        return false;
+        const ChessSquare kingSquare = (turn_ == Color::White) ? whiteKingSquare_ : blackKingSquare_;
+        return isSquareAttacked(kingSquare);
     }
 
     bool ChessPosition::isInCheckmate() const {

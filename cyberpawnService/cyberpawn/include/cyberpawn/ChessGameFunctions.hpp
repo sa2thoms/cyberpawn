@@ -15,6 +15,25 @@ namespace cyberpawn {
         T square(T a) { return a * a; }
     }
 
+    struct MoveUndo {
+        ChessMove move;
+        PieceCode movingPiece = PieceCode::noPiece;
+        PieceCode captured = PieceCode::noPiece;
+        ChessSquare capturedSquare{};
+        std::optional<int8_t> prevEnPassantFile;
+        bool prevWhiteCastleK = true;
+        bool prevWhiteCastleQ = true;
+        bool prevBlackCastleK = true;
+        bool prevBlackCastleQ = true;
+        Color prevTurn = Color::White;
+        bool wasEnPassant = false;
+        bool wasKingsideCastle = false;
+        bool wasQueensideCastle = false;
+    };
+
+    bool tryMakeMove(ChessPosition& position, const ChessMove& move, MoveUndo& undo);
+    void unmakeMove(ChessPosition& position, const MoveUndo& undo);
+
     bool withinBoard(ChessSquare square);
 
     // if the move is legal, a new position with the move made is returned. If the
